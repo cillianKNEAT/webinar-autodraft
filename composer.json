@@ -29,7 +29,7 @@
         }
     },
     "scripts": {
-        "phpcs": "phpcs --standard=WordPress --extensions=php --report=full --colors -s ./includes/ ./webinar-autodraft.php ./tests/",
+        "phpcs": "phpcs --standard=WordPress --extensions=php --report=full --colors -s ./includes/ ./webinar-autodraft.php ./tests/"
         "phpcbf": "phpcbf --standard=WordPress --extensions=php ./includes/ ./webinar-autodraft.php ./tests/",
         "phpunit": "phpunit"
     },
