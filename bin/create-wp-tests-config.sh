@@ -21,7 +21,7 @@ if [ ! -d "$WP_CORE_DIR" ]; then
 fi
 
 # Create wp-tests-config.php
-cat > "$WP_TESTS_DIR/wp-tests-config.php" << 'EOF'
+cat > "$WP_TESTS_DIR/wp-tests-config.php" << EOF
 <?php
 // Force known values to be used by WP tests.
 define( 'WP_TESTS_DOMAIN', 'example.org' );
@@ -38,10 +38,10 @@ define( 'DB_CHARSET', 'utf8' );
 define( 'DB_COLLATE', '' );
 
 // Set the WordPress core directory.
-define( 'ABSPATH', '$WP_CORE_DIR/' );
+define( 'ABSPATH', '${WP_CORE_DIR}/' );
 
 // Set the WordPress tests directory.
-define( 'WP_TESTS_DIR', '$WP_TESTS_DIR/' );
+define( 'WP_TESTS_DIR', '${WP_TESTS_DIR}/' );
 
 // Set the WordPress test suite directory.
 define( 'WP_TESTS_PHPUNIT_POLYFILLS_PATH', dirname( __DIR__ ) . '/vendor/yoast/phpunit-polyfills' );
@@ -60,6 +60,9 @@ define( 'WP_TESTS_DEBUG', false );
 
 // Set the WordPress test suite multisite mode.
 define( 'WP_TESTS_MULTISITE', false );
+
+// Set the table prefix
+\$table_prefix = 'wp_';
 EOF
 
 # Verify the config file was created

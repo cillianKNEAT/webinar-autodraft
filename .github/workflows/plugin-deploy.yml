@@ -123,7 +123,7 @@ jobs:
         # Create wp-tests-config.php with required constants
         echo "Creating wp-tests-config.php..."
         chmod +x bin/create-wp-tests-config.sh
-        bin/create-wp-tests-config.sh $WP_TESTS_DIR $WP_CORE_DIR
+        bin/create-wp-tests-config.sh "$WP_TESTS_DIR" "$WP_CORE_DIR"
         
         # Set environment variables for PHPUnit
         echo "WP_TESTS_DIR=$WP_TESTS_DIR" >> $GITHUB_ENV
@@ -145,6 +145,17 @@ jobs:
         # Print final directory structure for debugging
         echo "Final WordPress core directory structure:"
         ls -la $WP_CORE_DIR
+        
+        # Verify wp-tests-config.php was created correctly
+        echo "Verifying wp-tests-config.php..."
+        if [ ! -f "$WP_TESTS_DIR/wp-tests-config.php" ]; then
+          echo "wp-tests-config.php not created"
+          exit 1
+        fi
+        
+        # Print wp-tests-config.php contents for debugging
+        echo "wp-tests-config.php contents:"
+        cat "$WP_TESTS_DIR/wp-tests-config.php"
     
     - name: Run PHPUnit
       run: composer phpunit
