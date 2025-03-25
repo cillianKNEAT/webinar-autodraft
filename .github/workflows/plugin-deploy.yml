@@ -21,6 +21,19 @@ jobs:
       - name: Install Composer dependencies
         run: composer install --prefer-dist --no-progress
 
+      - name: Setup WordPress Test Suite
+        run: |
+          # Create test directories
+          mkdir -p /tmp/wordpress-tests-lib/includes
+          mkdir -p /tmp/wordpress-tests-lib/data
+          
+          # Copy WordPress test suite from local repository
+          cp -r tests/wordpress-tests-lib/includes/* /tmp/wordpress-tests-lib/includes/
+          cp -r tests/wordpress-tests-lib/data/* /tmp/wordpress-tests-lib/data/
+          
+          # Create wp-tests-config.php
+          printf '<?php\ndefine("DB_NAME", "wordpress_test");\ndefine("DB_USER", "root");\ndefine("DB_PASSWORD", "root");\ndefine("DB_HOST", "127.0.0.1");\ndefine("DB_CHARSET", "utf8");\ndefine("DB_COLLATE", "");\n\n$table_prefix = "wp_";\n\ndefine("WP_DEBUG", false);\n\ndefine("WP_TESTS_DOMAIN", "example.org");\ndefine("WP_TESTS_EMAIL", "admin@example.org");\ndefine("WP_TESTS_TITLE", "Test Blog");\n\ndefine("WP_PHP_BINARY", "php");\ndefine("WPLANG", "");\ndefine("WP_DEVELOP_DIR", "/tmp/wordpress");\n' > /tmp/wordpress-tests-lib/wp-tests-config.php
+
       - name: Run PHPUnit tests
         run: vendor/bin/phpunit --coverage-clover=coverage.xml
 
