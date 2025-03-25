@@ -30,4 +30,5 @@ wp-content/wp-cache-config.php
 
 # Build
 *.zip
-*.tar.gz 
+*.tar.gz
+/temp-package/ 
