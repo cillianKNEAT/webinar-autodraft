@@ -196,7 +196,8 @@ jobs:
           
           # Create wp-config.php manually
           echo "Creating wp-config.php..."
-          echo "<?php
+          cat > /tmp/wordpress/wp-config.php << 'EOL'
+<?php
 define('DB_NAME', 'wordpress_test');
 define('DB_USER', 'root');
 define('DB_PASSWORD', 'root');
@@ -204,7 +205,7 @@ define('DB_HOST', '127.0.0.1');
 define('DB_CHARSET', 'utf8');
 define('DB_COLLATE', '');
 
-\$table_prefix = 'wp_';
+$table_prefix = 'wp_';
 
 define('WP_DEBUG', false);
 
@@ -212,7 +213,8 @@ if (!defined('ABSPATH')) {
     define('ABSPATH', __DIR__ . '/');
 }
 
-require_once ABSPATH . 'wp-settings.php';" > /tmp/wordpress/wp-config.php
+require_once ABSPATH . 'wp-settings.php';
+EOL
           
           # Verify WordPress core files
           echo "Verifying WordPress core files..."
