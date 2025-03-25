@@ -27,7 +27,7 @@ jobs:
       uses: shivammathur/setup-php@v2
       with:
         php-version: '7.2'
-        extensions: mbstring, xml, ctype, iconv, intl, pdo_sqlite, mysql, mysqli, pgsql, curl, libxml, zip, pcntl, pdo, sqlite3, pdo_mysql, pdo_pgsql, mbstring, gd, exif, zip, calendar, dom, iconv, json, mbstring, pdo, pdo_sqlite, session, sqlite3, timezonedb, tokenizer, xml, ctype, fileinfo, intl, json, mbstring, pdo, session, tokenizer, xml, zip
+        extensions: mbstring, xml, ctype, iconv, intl, pdo_sqlite, mysql, mysqli, pgsql, curl, libxml, zip, pcntl, pdo, sqlite3, pdo_mysql, pdo_pgsql, mbstring, gd, exif, zip, calendar, dom, iconv, json, mbstring, pdo, pdo_sqlite, session, sqlite3, timezonedb, tokenizer, xml, ctype, fileinfo, intl, json, mbstring, pdo, session, tokenizer, xml, zip, simplexml
         coverage: xdebug
     
     - name: Install Composer dependencies
@@ -44,12 +44,6 @@ jobs:
         while ! mysqladmin ping -h"127.0.0.1" -P"3306" --silent; do
           sleep 1
         done
-    
-    - name: Check and create database
-      run: |
-        if ! mysql -u root -proot -h 127.0.0.1 -e "SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME = 'wordpress_test'" | grep -q wordpress_test; then
-          mysqladmin create wordpress_test -u root -proot -h 127.0.0.1
-        fi
     
     - name: Install WordPress test suite
       run: |
