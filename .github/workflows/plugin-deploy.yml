@@ -82,13 +82,14 @@ jobs:
           download_wordpress() {
             local max_attempts=3
             local attempt=1
-            local wait_time=5
+            local wait_time=10  # Increased wait time between retries
             
             while [ $attempt -le $max_attempts ]; do
               echo "Download attempt $attempt of $max_attempts..."
               
-              # Test network connectivity
-              if ! curl -s --head https://wordpress.org > /dev/null; then
+              # Test network connectivity with timeout
+              echo "Testing network connectivity..."
+              if ! curl -s --max-time 10 --head https://wordpress.org > /dev/null; then
                 echo "Network connectivity check failed. Waiting $wait_time seconds..."
                 sleep $wait_time
                 attempt=$((attempt + 1))
@@ -96,10 +97,31 @@ jobs:
               fi
               
               # Download WordPress core with explicit path and debug output
-              if wp core download --path=/tmp/wordpress --allow-root --debug; then
+              echo "Starting WordPress download..."
+              # First download to a temporary location
+              TEMP_DIR="/tmp/wp-temp"
+              mkdir -p "$TEMP_DIR"
+              
+              # Download with progress bar and slower speed
+              if curl -L --max-time 300 --limit-rate 500k \
+                https://wordpress.org/latest.tar.gz \
+                --progress-bar \
+                -o "$TEMP_DIR/wordpress.tar.gz"; then
+                
+                echo "Download completed, extracting files..."
+                # Extract to temporary location first
+                tar -xzf "$TEMP_DIR/wordpress.tar.gz" -C "$TEMP_DIR"
+                
+                # Move files to final location
+                echo "Moving files to final location..."
+                mv "$TEMP_DIR/wordpress"/* /tmp/wordpress/
+                
+                # Clean up
+                rm -rf "$TEMP_DIR"
+                
                 # Verify download success
                 if [ -f "/tmp/wordpress/wp-settings.php" ]; then
-                  echo "WordPress downloaded successfully!"
+                  echo "WordPress downloaded and extracted successfully!"
                   return 0
                 else
                   echo "Download completed but wp-settings.php not found"
@@ -108,6 +130,8 @@ jobs:
                 fi
               else
                 echo "Download failed with exit code $?"
+                echo "Cleaning up temporary files..."
+                rm -rf "$TEMP_DIR"
               fi
               
               if [ $attempt -lt $max_attempts ]; then
