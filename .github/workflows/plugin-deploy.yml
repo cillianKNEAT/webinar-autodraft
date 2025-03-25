@@ -26,7 +26,7 @@ jobs:
     - name: Setup PHP
       uses: shivammathur/setup-php@v2
       with:
-        php-version: '7.2'
+        php-version: '7.4'
         extensions: mbstring, xml, ctype, iconv, intl, pdo_sqlite, mysql, mysqli, pgsql, curl, libxml, zip, pcntl, pdo, sqlite3, pdo_mysql, pdo_pgsql, mbstring, gd, exif, zip, calendar, dom, iconv, json, mbstring, pdo, pdo_sqlite, session, sqlite3, timezonedb, tokenizer, xml, ctype, fileinfo, intl, json, mbstring, pdo, session, tokenizer, xml, zip, simplexml
         coverage: xdebug
     
