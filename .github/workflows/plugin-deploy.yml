@@ -78,18 +78,66 @@ jobs:
           cd /tmp/wordpress
           echo "Changed to directory: $(pwd)"
           
-          # Download WordPress core with explicit path
-          wp core download --path=/tmp/wordpress --allow-root --debug
+          # Function to download WordPress with retries
+          download_wordpress() {
+            local max_attempts=3
+            local attempt=1
+            local wait_time=5
+            
+            while [ $attempt -le $max_attempts ]; do
+              echo "Download attempt $attempt of $max_attempts..."
+              
+              # Test network connectivity
+              if ! curl -s --head https://wordpress.org > /dev/null; then
+                echo "Network connectivity check failed. Waiting $wait_time seconds..."
+                sleep $wait_time
+                attempt=$((attempt + 1))
+                continue
+              fi
+              
+              # Download WordPress core with explicit path and debug output
+              if wp core download --path=/tmp/wordpress --allow-root --debug; then
+                # Verify download success
+                if [ -f "/tmp/wordpress/wp-settings.php" ]; then
+                  echo "WordPress downloaded successfully!"
+                  return 0
+                else
+                  echo "Download completed but wp-settings.php not found"
+                  echo "Directory contents:"
+                  ls -la /tmp/wordpress/
+                fi
+              else
+                echo "Download failed with exit code $?"
+              fi
+              
+              if [ $attempt -lt $max_attempts ]; then
+                echo "Waiting $wait_time seconds before retry..."
+                sleep $wait_time
+              fi
+              
+              attempt=$((attempt + 1))
+            done
+            
+            echo "Failed to download WordPress after $max_attempts attempts"
+            return 1
+          }
           
-          # Verify download
-          if [ ! -f "/tmp/wordpress/wp-settings.php" ]; then
-            echo "Error: WordPress download failed"
+          # Execute download with retries
+          if ! download_wordpress; then
+            echo "Error: WordPress download failed after all retry attempts"
             echo "Directory contents:"
             ls -la /tmp/wordpress/
             exit 1
           fi
           
+          # Verify download size and structure
+          echo "Verifying download size and structure..."
+          du -sh /tmp/wordpress/
+          echo "Directory structure:"
+          find /tmp/wordpress -maxdepth 2 -type d | sort
+          
           # Create wp-config.php
+          echo "Creating wp-config.php..."
           wp config create \
             --path=/tmp/wordpress \
             --dbname=wordpress_test \
