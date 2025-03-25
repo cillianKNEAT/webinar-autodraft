@@ -29,8 +29,8 @@
         }
     },
     "scripts": {
-        "phpcs": "phpcs --standard=WordPress",
-        "phpcbf": "phpcbf --standard=WordPress",
+        "phpcs": "phpcs --standard=WordPress --extensions=php --ignore=vendor/*,node_modules/*,bin/*,tests/phpunit/includes/*,tests/phpunit/data/* --report-width=120 ./includes/ ./webinar-autodraft.php",
+        "phpcbf": "phpcbf --standard=WordPress --extensions=php --ignore=vendor/*,node_modules/*,bin/*,tests/phpunit/includes/*,tests/phpunit/data/* --report-width=120 ./includes/ ./webinar-autodraft.php",
         "phpunit": "phpunit"
     },
     "config": {
