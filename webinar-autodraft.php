@@ -140,11 +140,12 @@ function check_expired_webinars() {
 		// Skip if no date is set.
 		if ( empty( $webinar_date ) ) {
 			if ( $enable_logging ) {
-				error_log(
+				WAD_Notifications::log_message(
 					sprintf(
 						'Webinar ID %d skipped: No date set.',
 						$webinar->ID
-					)
+					),
+					'info'
 				);
 			}
 			continue;
@@ -166,22 +167,24 @@ function check_expired_webinars() {
 			if ( is_wp_error( $update_result ) ) {
 				$failed_count++;
 				if ( $enable_logging ) {
-					error_log(
+					WAD_Notifications::log_message(
 						sprintf(
 							'Failed to revert webinar ID %d to draft: %s.',
 							$webinar->ID,
 							$update_result->get_error_message()
-						)
+						),
+						'error'
 					);
 				}
 			} else {
 				$reverted_count++;
 				if ( $enable_logging ) {
-					error_log(
+					WAD_Notifications::log_message(
 						sprintf(
 							'Successfully reverted webinar ID %d to draft status.',
 							$webinar->ID
-						)
+						),
+						'success'
 					);
 				}
 			}

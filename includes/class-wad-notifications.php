@@ -87,4 +87,33 @@ class WAD_Notifications {
 
 		return $message;
 	}
+
+	/**
+	 * Log a message with appropriate formatting and level
+	 *
+	 * @since 1.0
+	 * @param string $message The message to log.
+	 * @param string $level   The log level (info, error, success).
+	 * @return void
+	 */
+	public static function log_message( $message, $level = 'info' ) {
+		// Format the message with timestamp and level.
+		$formatted_message = sprintf(
+			'[%s] [%s] %s',
+			gmdate( 'Y-m-d H:i:s' ),
+			strtoupper( $level ),
+			$message
+		);
+
+		// Log to WordPress debug log if enabled.
+		if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+			error_log( $formatted_message );
+		}
+
+		// Store in plugin's log file if enabled.
+		$log_file = WAD_PLUGIN_DIR . 'logs/webinar-autodraft.log';
+		if ( file_exists( dirname( $log_file ) ) ) {
+			file_put_contents( $log_file, $formatted_message . PHP_EOL, FILE_APPEND );
+		}
+	}
 }
