@@ -32,12 +32,9 @@
         <exclude name="WordPress.PHP.DevelopmentFunctions.error_log"/>
     </rule>
 
-    <!-- Ignore problematic sniffs -->
+    <!-- Ignore I18n sniff issues -->
     <rule ref="WordPress.WP.I18n">
         <exclude name="WordPress.WP.I18n"/>
-    </rule>
-    <rule ref="WordPress.NamingConventions.PrefixAllGlobals">
-        <exclude name="WordPress.NamingConventions.PrefixAllGlobals"/>
     </rule>
 
     <!-- File paths to check -->

@@ -25,185 +25,89 @@ jobs:
         options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
     
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
     
     - name: Setup PHP
       uses: shivammathur/setup-php@v2
       with:
-        php-version: '7.4'
-        extensions: mbstring, xml, ctype, iconv, intl, pdo_sqlite, mysql, mysqli, pgsql, curl, libxml, zip, pcntl, pdo, sqlite3, pdo_mysql, pdo_pgsql, mbstring, gd, exif, zip, calendar, dom, iconv, json, mbstring, pdo, pdo_sqlite, session, sqlite3, timezonedb, tokenizer, xml, ctype, fileinfo, intl, json, mbstring, pdo, session, tokenizer, xml, zip, simplexml
+        php-version: '8.2'
+        extensions: mbstring, xml, ctype, iconv, intl, pdo_mysql, mysqli, curl, zip
         coverage: xdebug
-        xdebug-version: '3.1.6'
+        xdebug-version: '3.2.1'
         xdebug-mode: coverage
+    
+    - name: Install WP-CLI
+      run: |
+        curl -O https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar
+        chmod +x wp-cli.phar
+        sudo mv wp-cli.phar /usr/local/bin/wp
     
     - name: Install Composer dependencies
       run: |
-        composer install --prefer-dist --no-progress
-        composer update -W
+        composer install --prefer-dist --no-progress --no-dev
+        composer update --prefer-stable
     
-    - name: Install SVN
-      run: sudo apt-get update && sudo apt-get install -y subversion
-    
-    - name: Make install script executable
-      run: chmod +x bin/install-wp-tests.sh
-    
-    - name: Wait for MySQL
+    - name: Prepare WordPress Test Environment
       run: |
-        while ! mysqladmin ping -h"127.0.0.1" -P"3306" --silent; do
-          sleep 1
-        done
-    
-    - name: Install WordPress test suite
-      run: |
-        WP_TESTS_DIR=/tmp/wordpress-tests-lib
-        WP_CORE_DIR=/tmp/wordpress
-        TEMP_DIR=/tmp/wordpress-temp
-        
         # Create directories
-        echo "Creating directories..."
-        mkdir -p $WP_TESTS_DIR
-        mkdir -p $WP_CORE_DIR
-        mkdir -p $TEMP_DIR
+        mkdir -p /tmp/wordpress-tests-lib
+        mkdir -p /tmp/wordpress
         
-        # Download WordPress core files
-        echo "Downloading WordPress core files..."
-        curl -L -o wordpress.tar.gz https://wordpress.org/latest.tar.gz
-        
-        # Extract WordPress core files
-        echo "Extracting WordPress core files..."
-        tar -xzf wordpress.tar.gz -C $TEMP_DIR
-        
-        # Move WordPress files to the correct location
-        echo "Moving WordPress files..."
-        cp -r $TEMP_DIR/wordpress/* $WP_CORE_DIR/
-        
-        # Clean up temporary files
-        echo "Cleaning up temporary files..."
-        rm -rf $TEMP_DIR wordpress.tar.gz
+        # Download WordPress core
+        wp core download --path=/tmp/wordpress --allow-root
         
         # Verify WordPress core files
-        echo "Verifying WordPress core files..."
-        if [ ! -f "$WP_CORE_DIR/wp-settings.php" ]; then
+        if [ ! -f "/tmp/wordpress/wp-settings.php" ]; then
           echo "WordPress core files not downloaded correctly"
-          echo "Directory contents:"
-          ls -la $WP_CORE_DIR
           exit 1
         fi
         
-        # Verify WordPress core directory structure
-        echo "Verifying WordPress core directory structure..."
-        required_files=(
-          "wp-settings.php"
-          "wp-config-sample.php"
-          "wp-includes"
-          "wp-admin"
-        )
+        # Download WordPress test suite
+        svn export https://develop.svn.wordpress.org/trunk/tests/phpunit/includes/ /tmp/wordpress-tests-lib/includes
+        svn export https://develop.svn.wordpress.org/trunk/tests/phpunit/data/ /tmp/wordpress-tests-lib/data
         
-        for file in "${required_files[@]}"; do
-          if [ ! -e "$WP_CORE_DIR/$file" ]; then
-            echo "Required WordPress file/directory not found: $file"
-            echo "Directory contents:"
-            ls -la $WP_CORE_DIR
-            exit 1
-          fi
-        done
-        
-        # Verify wp-includes directory
-        echo "Verifying wp-includes directory..."
-        if [ ! -d "$WP_CORE_DIR/wp-includes" ]; then
-          echo "wp-includes directory not found"
-          echo "Directory contents:"
-          ls -la $WP_CORE_DIR
-          exit 1
-        fi
-        
-        # Download wp-includes files directly if needed
-        echo "Downloading wp-includes files..."
-        curl -L -o $WP_CORE_DIR/wp-includes/class-wp-phpmailer.php https://raw.githubusercontent.com/WordPress/wordpress-develop/trunk/src/wp-includes/class-wp-phpmailer.php
-        
-        # Verify wp-includes files
-        echo "Verifying wp-includes files..."
-        if [ ! -f "$WP_CORE_DIR/wp-includes/class-wp-phpmailer.php" ]; then
-          echo "Required WordPress includes file not found: class-wp-phpmailer.php"
-          echo "wp-includes directory contents:"
-          ls -la "$WP_CORE_DIR/wp-includes"
-          exit 1
-        fi
-        
-        # Download test suite files
-        echo "Downloading WordPress test suite..."
-        svn co --quiet https://develop.svn.wordpress.org/trunk/tests/phpunit/includes/ $WP_TESTS_DIR/includes
-        svn co --quiet https://develop.svn.wordpress.org/trunk/tests/phpunit/data/ $WP_TESTS_DIR/data
-        
-        # Download additional test files
-        echo "Downloading additional test files..."
-        curl -o $WP_TESTS_DIR/includes/functions.php https://raw.githubusercontent.com/WordPress/wordpress-develop/trunk/tests/phpunit/includes/functions.php
-        curl -o $WP_TESTS_DIR/includes/bootstrap.php https://raw.githubusercontent.com/WordPress/wordpress-develop/trunk/tests/phpunit/includes/bootstrap.php
+        # Download specific test files
+        curl -o /tmp/wordpress-tests-lib/includes/functions.php https://raw.githubusercontent.com/WordPress/wordpress-develop/trunk/tests/phpunit/includes/functions.php
+        curl -o /tmp/wordpress-tests-lib/includes/bootstrap.php https://raw.githubusercontent.com/WordPress/wordpress-develop/trunk/tests/phpunit/includes/bootstrap.php
         
         # Install test suite
-        echo "Installing WordPress test suite..."
-        bash bin/install-wp-tests.sh wordpress_test root root 127.0.0.1 latest
+        wp scaffold plugin-tests ${{ github.event.repository.name }} --allow-root
         
-        # Create wp-tests-config.php with required constants
-        echo "Creating wp-tests-config.php..."
-        chmod +x bin/create-wp-tests-config.sh
-        bin/create-wp-tests-config.sh "$WP_TESTS_DIR" "$WP_CORE_DIR"
+        # Create wp-tests-config.php
+        wp config create \
+          --path=/tmp/wordpress-tests-lib \
+          --dbname=wordpress_test \
+          --dbuser=root \
+          --dbpass=root \
+          --dbhost=127.0.0.1 \
+          --allow-root
         
-        # Set environment variables for PHPUnit
-        echo "WP_TESTS_DIR=$WP_TESTS_DIR" >> $GITHUB_ENV
-        echo "WP_CORE_DIR=$WP_CORE_DIR" >> $GITHUB_ENV
-        
-        # Verify test files exist
-        echo "Verifying test files..."
-        if [ ! -f "$WP_TESTS_DIR/includes/functions.php" ]; then
+        # Verify test files
+        if [ ! -f "/tmp/wordpress-tests-lib/includes/functions.php" ]; then
           echo "WordPress test files not downloaded correctly"
-          echo "Directory contents:"
-          ls -la $WP_TESTS_DIR/includes
           exit 1
         fi
-        
-        # List all test files for debugging
-        echo "Test directory contents:"
-        ls -la $WP_TESTS_DIR/includes/
-        
-        # Print final directory structure for debugging
-        echo "Final WordPress core directory structure:"
-        ls -la $WP_CORE_DIR
-        
-        # Verify wp-tests-config.php was created correctly
-        echo "Verifying wp-tests-config.php..."
-        if [ ! -f "$WP_TESTS_DIR/wp-tests-config.php" ]; then
-          echo "wp-tests-config.php not created"
-          exit 1
-        fi
-        
-        # Print wp-tests-config.php contents for debugging
-        echo "wp-tests-config.php contents:"
-        cat "$WP_TESTS_DIR/wp-tests-config.php"
-        
-        # Verify file permissions
-        echo "Verifying file permissions..."
-        chmod -R 755 "$WP_CORE_DIR"
-        chmod -R 755 "$WP_TESTS_DIR"
     
-    - name: Run PHPUnit with coverage
+    - name: Run PHPUnit with Coverage
       run: |
         mkdir -p tests/coverage
-        XDEBUG_MODE=coverage vendor/bin/phpunit --coverage-html tests/coverage --coverage-clover tests/coverage.xml --configuration phpunit.xml.dist
         
-        # Verify coverage files were created
+        # Ensure PHPUnit is installed
+        composer require --dev phpunit/phpunit
+        
+        # Run PHPUnit with coverage
+        vendor/bin/phpunit \
+          --coverage-html tests/coverage \
+          --coverage-clover tests/coverage.xml \
+          --configuration phpunit.xml.dist
+        
+        # Verify coverage file
         if [ ! -f "tests/coverage.xml" ]; then
           echo "Coverage file not generated"
-          echo "Directory contents:"
-          ls -la tests/
           exit 1
         fi
-        
-        # Print coverage file contents for debugging
-        echo "Coverage file contents:"
-        cat tests/coverage.xml
     
-    - name: Upload coverage reports
+    - name: Upload Coverage Reports
       uses: codecov/codecov-action@v3
       with:
         file: ./tests/coverage.xml
@@ -219,7 +123,7 @@ jobs:
     if: github.ref == 'refs/heads/main'
     
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
     
     - name: Create Release
       id: create_release
@@ -234,7 +138,14 @@ jobs:
     
     - name: Create ZIP file
       run: |
-        zip -r webinar-autodraft.zip . -x "*.git*" -x "*.github*" -x "*.DS_Store" -x "*.idea*" -x "*.vscode*" -x "vendor/*" -x "tests/*" -x "composer.*" -x "phpunit.xml" -x "phpcs.xml" -x "phpcs.xml.dist" -x "phpunit.xml.dist" -x "README.md" -x "LICENSE"
+        zip -r plugin-release.zip . \
+          -x "*.git*" \
+          -x "*.github*" \
+          -x "vendor/*/tests" \
+          -x "composer.*" \
+          -x "phpunit.xml*" \
+          -x "phpcs.xml*" \
+          -x "tests/*"
     
     - name: Upload Release Asset
       uses: actions/upload-release-asset@v1
@@ -242,6 +153,6 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ./webinar-autodraft.zip
-        asset_name: webinar-autodraft.zip
-        asset_content_type: application/zip 
+        asset_path: ./plugin-release.zip
+        asset_name: plugin-release.zip
+        asset_content_type: application/zip
