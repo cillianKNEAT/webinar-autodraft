@@ -89,7 +89,7 @@ This project is licensed under the GPL v2 or later - see the [LICENSE](LICENSE) 
 
 ## Author
 
-Cillian Bracken Conway - [cillian.bracken-conway@kneat.com](mailto:cillian.bracken-conway@kneat.com)
+Cillian Bracken Conway - [167992824+cillianKNEAT@users.noreply.github.com](mailto:167992824+cillianKNEAT@users.noreply.github.com)
 
 ## Support
 
