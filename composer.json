@@ -1,5 +1,5 @@
 {
-    "name": "yourusername/webinar-autodraft",
+    "name": "cillianKNEAT/webinar-autodraft",
     "description": "A WordPress plugin that automatically reverts webinar posts to draft status when their date has passed.",
     "type": "wordpress-plugin",
     "license": "GPL-2.0-or-later",
