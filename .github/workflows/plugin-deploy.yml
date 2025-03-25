@@ -62,13 +62,30 @@ jobs:
           exit 1
         fi
         
-        # Download WordPress test suite
-        svn export https://develop.svn.wordpress.org/trunk/tests/phpunit/includes/ /tmp/wordpress-tests-lib/includes
-        svn export https://develop.svn.wordpress.org/trunk/tests/phpunit/data/ /tmp/wordpress-tests-lib/data
+        # Install WordPress test suite
+        sudo apt-get update
+        sudo apt-get install -y subversion
         
-        # Download specific test files
-        curl -o /tmp/wordpress-tests-lib/includes/functions.php https://raw.githubusercontent.com/WordPress/wordpress-develop/trunk/tests/phpunit/includes/functions.php
-        curl -o /tmp/wordpress-tests-lib/includes/bootstrap.php https://raw.githubusercontent.com/WordPress/wordpress-develop/trunk/tests/phpunit/includes/bootstrap.php
+        # Download WordPress test suite
+        svn co --quiet https://develop.svn.wordpress.org/trunk/tests/phpunit/includes/ $WP_TESTS_DIR/includes
+        svn co --quiet https://develop.svn.wordpress.org/trunk/tests/phpunit/data/ $WP_TESTS_DIR/data
+        
+        # Download critical test files directly
+        mkdir -p $WP_TESTS_DIR/includes
+        curl -s https://raw.githubusercontent.com/WordPress/wordpress-develop/trunk/tests/phpunit/includes/functions.php > $WP_TESTS_DIR/includes/functions.php
+        curl -s https://raw.githubusercontent.com/WordPress/wordpress-develop/trunk/tests/phpunit/includes/bootstrap.php > $WP_TESTS_DIR/includes/bootstrap.php
+        
+        # Verify test files
+        echo "Verifying test files..."
+        ls -la $WP_TESTS_DIR/includes/
+        if [ ! -f "$WP_TESTS_DIR/includes/functions.php" ]; then
+          echo "Error: functions.php not found"
+          exit 1
+        fi
+        if [ ! -f "$WP_TESTS_DIR/includes/bootstrap.php" ]; then
+          echo "Error: bootstrap.php not found"
+          exit 1
+        fi
         
         # Install test suite
         wp scaffold plugin-tests ${{ github.event.repository.name }} --allow-root
