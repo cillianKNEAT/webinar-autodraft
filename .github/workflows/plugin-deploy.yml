@@ -29,13 +29,23 @@ jobs:
         php-version: '7.2'
         extensions: mbstring, xml, ctype, iconv, intl, pdo_sqlite, mysql, mysqli, pgsql, curl, libxml, zip, pcntl, pdo, sqlite3, pdo_mysql, pdo_pgsql, mbstring, gd, exif, zip, calendar, dom, iconv, json, mbstring, pdo, pdo_sqlite, session, sqlite3, timezonedb, tokenizer, xml, ctype, fileinfo, intl, json, mbstring, pdo, session, tokenizer, xml, zip
         coverage: xdebug
+        tools: svn
     
     - name: Install Composer dependencies
       run: composer install --prefer-dist --no-progress
     
+    - name: Make install script executable
+      run: chmod +x bin/install-wp-tests.sh
+    
+    - name: Wait for MySQL
+      run: |
+        while ! mysqladmin ping -h"127.0.0.1" -P"3306" --silent; do
+          sleep 1
+        done
+    
     - name: Install WordPress test suite
       run: |
-        bash bin/install-wp-tests.sh wordpress_test root root localhost latest
+        bash bin/install-wp-tests.sh wordpress_test root root 127.0.0.1 latest
     
     - name: Run PHPCS
       run: composer phpcs
