@@ -83,51 +83,104 @@ jobs:
             local max_attempts=3
             local attempt=1
             local wait_time=10  # Increased wait time between retries
+            local download_url="https://wordpress.org/latest.tar.gz"
+            local checksum_url="https://wordpress.org/latest.tar.gz.md5"
             
             while [ $attempt -le $max_attempts ]; do
-              echo "Download attempt $attempt of $max_attempts..."
+              echo "=== Download attempt $attempt of $max_attempts ==="
+              echo "Current timestamp: $(date '+%Y-%m-%d %H:%M:%S')"
               
-              # Test network connectivity with timeout
-              echo "Testing network connectivity..."
-              if ! curl -s --max-time 10 --head https://wordpress.org > /dev/null; then
+              # Test network connectivity with timeout and detailed output
+              echo "Testing network connectivity to wordpress.org..."
+              if ! curl -v --max-time 10 --head https://wordpress.org 2>&1 | tee /tmp/curl-debug.log; then
                 echo "Network connectivity check failed. Waiting $wait_time seconds..."
+                echo "Last curl exit code: $?"
+                echo "Curl debug output:"
+                cat /tmp/curl-debug.log
                 sleep $wait_time
                 attempt=$((attempt + 1))
                 continue
               fi
               
               # Download WordPress core with explicit path and debug output
-              echo "Starting WordPress download..."
+              echo "Starting WordPress download from $download_url..."
+              echo "Downloading to temporary directory..."
+              
               # First download to a temporary location
               TEMP_DIR="/tmp/wp-temp"
               mkdir -p "$TEMP_DIR"
               
               # Download with progress bar and slower speed
+              echo "Downloading WordPress archive..."
               if curl -L --max-time 300 --limit-rate 500k \
-                https://wordpress.org/latest.tar.gz \
+                "$download_url" \
                 --progress-bar \
                 -o "$TEMP_DIR/wordpress.tar.gz"; then
                 
-                echo "Download completed, extracting files..."
+                echo "Download completed. Verifying archive integrity..."
+                
+                # Download and verify MD5 checksum
+                echo "Downloading MD5 checksum..."
+                if curl -s "$checksum_url" > "$TEMP_DIR/wordpress.tar.gz.md5"; then
+                  echo "Verifying MD5 checksum..."
+                  if ! md5sum -c "$TEMP_DIR/wordpress.tar.gz.md5" 2>&1 | tee /tmp/md5-debug.log; then
+                    echo "MD5 checksum verification failed!"
+                    echo "MD5 debug output:"
+                    cat /tmp/md5-debug.log
+                    rm -rf "$TEMP_DIR"
+                    attempt=$((attempt + 1))
+                    continue
+                  fi
+                else
+                  echo "Failed to download MD5 checksum"
+                  rm -rf "$TEMP_DIR"
+                  attempt=$((attempt + 1))
+                  continue
+                fi
+                
+                echo "Archive integrity verified. Extracting files..."
                 # Extract to temporary location first
-                tar -xzf "$TEMP_DIR/wordpress.tar.gz" -C "$TEMP_DIR"
+                if ! tar -xzf "$TEMP_DIR/wordpress.tar.gz" -C "$TEMP_DIR" 2>&1 | tee /tmp/tar-debug.log; then
+                  echo "Extraction failed!"
+                  echo "Tar debug output:"
+                  cat /tmp/tar-debug.log
+                  rm -rf "$TEMP_DIR"
+                  attempt=$((attempt + 1))
+                  continue
+                fi
                 
                 # Verify extraction
                 echo "Verifying extracted files..."
+                echo "Extracted directory structure:"
+                find "$TEMP_DIR/wordpress" -maxdepth 2 -type d | sort
+                
                 if [ ! -d "$TEMP_DIR/wordpress/wp-includes" ]; then
                   echo "Error: wp-includes directory not found in extracted files"
                   echo "Extracted directory contents:"
                   ls -la "$TEMP_DIR/wordpress/"
                   rm -rf "$TEMP_DIR"
-                  return 1
+                  attempt=$((attempt + 1))
+                  continue
                 fi
                 
                 # Move files to final location
                 echo "Moving files to final location..."
+                echo "Current directory: $(pwd)"
+                echo "Target directory: /tmp/wordpress"
+                
                 # First, ensure target directory is empty
                 rm -rf /tmp/wordpress/*
-                # Then move files
-                mv "$TEMP_DIR/wordpress"/* /tmp/wordpress/
+                
+                # Then move files with verbose output
+                echo "Moving files from $TEMP_DIR/wordpress/* to /tmp/wordpress/"
+                if ! mv -v "$TEMP_DIR/wordpress"/* /tmp/wordpress/ 2>&1 | tee /tmp/mv-debug.log; then
+                  echo "Move operation failed!"
+                  echo "Move debug output:"
+                  cat /tmp/mv-debug.log
+                  rm -rf "$TEMP_DIR"
+                  attempt=$((attempt + 1))
+                  continue
+                fi
                 
                 # Verify wp-includes directory after move
                 echo "Verifying wp-includes directory after move..."
@@ -136,10 +189,12 @@ jobs:
                   echo "Target directory contents:"
                   ls -la /tmp/wordpress/
                   rm -rf "$TEMP_DIR"
-                  return 1
+                  attempt=$((attempt + 1))
+                  continue
                 fi
                 
                 # Clean up
+                echo "Cleaning up temporary files..."
                 rm -rf "$TEMP_DIR"
                 
                 # Verify download success and critical files
@@ -156,11 +211,15 @@ jobs:
                     echo "Error: Critical file not found: $file"
                     echo "Directory contents:"
                     ls -la "/tmp/wordpress/${file%/*}"
-                    return 1
+                    attempt=$((attempt + 1))
+                    continue 2
                   fi
                 done
                 
                 echo "WordPress downloaded and extracted successfully!"
+                echo "Final directory size: $(du -sh /tmp/wordpress/)"
+                echo "Final directory structure:"
+                find /tmp/wordpress -maxdepth 2 -type d | sort
                 return 0
               else
                 echo "Download failed with exit code $?"
@@ -177,6 +236,8 @@ jobs:
             done
             
             echo "Failed to download WordPress after $max_attempts attempts"
+            echo "Final directory contents:"
+            ls -la /tmp/wordpress/
             return 1
           }
           
