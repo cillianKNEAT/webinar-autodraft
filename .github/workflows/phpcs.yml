@@ -4,6 +4,12 @@ on:
   pull_request:
   # Allow manually triggering the workflow.
   workflow_dispatch:
+  # Allow other workflows to call this one
+  workflow_call:
+    outputs:
+      phpcs_status:
+        description: "The status of the PHPCS check"
+        value: ${{ jobs.phpcs.result }}
 
 # Cancel all previous workflow runs for the same branch that have not yet completed.
 concurrency:
