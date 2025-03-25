@@ -125,8 +125,16 @@ install_db() {
         fi
     fi
 
-    # create database
+    # Check if database exists
+    if mysql -u"$DB_USER" -p"$DB_PASS" -h"$DB_HOST" -e "SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME = '$DB_NAME'" | grep -q "$DB_NAME"; then
+        echo "Database $DB_NAME already exists"
+        return 0
+    fi
+
+    # create database if it doesn't exist
+    echo "Creating database $DB_NAME..."
     mysqladmin create $DB_NAME --user="$DB_USER" --password="$DB_PASS"$EXTRA
+    echo "Database created successfully"
 }
 
 install_wp
