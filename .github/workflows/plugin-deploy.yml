@@ -62,7 +62,10 @@ jobs:
         echo "Downloading WordPress core files..."
         curl -O https://wordpress.org/latest.tar.gz
         tar -xzf latest.tar.gz -C /tmp/
-        mv /tmp/wordpress/* $WP_CORE_DIR/
+        
+        # Move WordPress files to the correct location
+        echo "Moving WordPress files..."
+        cp -r /tmp/wordpress/* $WP_CORE_DIR/
         rm -rf /tmp/wordpress latest.tar.gz
         
         # Download test suite files
