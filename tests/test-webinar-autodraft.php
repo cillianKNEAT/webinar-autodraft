@@ -3,9 +3,10 @@
  * Test suite for Webinar Auto-Draft plugin
  *
  * @package WebinarAutoDraft
+ * @since 1.0
  */
 
-require_once dirname( __FILE__ ) . '/mocks/class-mock-acf.php';
+require_once __DIR__ . '/mocks/class-mock-acf.php';
 
 /**
  * Class Test_Webinar_Auto_Draft
@@ -89,7 +90,7 @@ class Test_Webinar_Auto_Draft extends WP_UnitTestCase {
 		wp_set_object_terms( $webinar_id, 'autodraft', 'post_tag' );
 
 		// Set a past date.
-		update_field( 'webinar_date', date( 'Y-m-d', strtotime( '-1 day' ) ), $webinar_id );
+		update_field( 'webinar_date', gmdate( 'Y-m-d', strtotime( '-1 day' ) ), $webinar_id );
 
 		// Run the check function.
 		check_expired_webinars();
@@ -120,7 +121,7 @@ class Test_Webinar_Auto_Draft extends WP_UnitTestCase {
 		wp_set_object_terms( $webinar_id, 'autodraft', 'post_tag' );
 
 		// Set a future date.
-		update_field( 'webinar_date', date( 'Y-m-d', strtotime( '+1 day' ) ), $webinar_id );
+		update_field( 'webinar_date', gmdate( 'Y-m-d', strtotime( '+1 day' ) ), $webinar_id );
 
 		// Run the check function.
 		check_expired_webinars();
@@ -176,7 +177,7 @@ class Test_Webinar_Auto_Draft extends WP_UnitTestCase {
 		);
 
 		// Set a past date.
-		update_field( 'webinar_date', date( 'Y-m-d', strtotime( '-1 day' ) ), $webinar_id );
+		update_field( 'webinar_date', gmdate( 'Y-m-d', strtotime( '-1 day' ) ), $webinar_id );
 
 		// Run the check function.
 		check_expired_webinars();

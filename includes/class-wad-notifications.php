@@ -50,21 +50,21 @@ class WAD_Notifications {
 	 * @return string The formatted message.
 	 */
 	private static function get_notification_message( $data ) {
-		$message = '<html><body>';
+		$message  = '<html><body>';
 		$message .= '<h2>' . esc_html__( 'Webinar Status Update', 'webinar-autodraft' ) . '</h2>';
 		$message .= '<p>' . sprintf(
 			/* translators: %s: Current date */
 			esc_html__( 'This is an automated message from your website. The following webinar status changes were processed on %s:', 'webinar-autodraft' ),
 			date_i18n( get_option( 'date_format' ) . ' ' . get_option( 'time_format' ) )
 		) . '</p>';
-		
+
 		$message .= '<ul>';
 		$message .= '<li>' . sprintf(
 			/* translators: %d: Number of webinars */
 			esc_html__( 'Total webinars processed: %d', 'webinar-autodraft' ),
 			$data['total_processed']
 		) . '</li>';
-		
+
 		if ( $data['reverted_count'] > 0 ) {
 			$message .= '<li>' . sprintf(
 				/* translators: %d: Number of webinars */
@@ -72,7 +72,7 @@ class WAD_Notifications {
 				$data['reverted_count']
 			) . '</li>';
 		}
-		
+
 		if ( $data['failed_count'] > 0 ) {
 			$message .= '<li>' . sprintf(
 				/* translators: %d: Number of webinars */
@@ -80,7 +80,7 @@ class WAD_Notifications {
 				$data['failed_count']
 			) . '</li>';
 		}
-		
+
 		$message .= '</ul>';
 		$message .= '<p>' . esc_html__( 'You can view and manage your webinars in the WordPress admin panel.', 'webinar-autodraft' ) . '</p>';
 		$message .= '</body></html>';
