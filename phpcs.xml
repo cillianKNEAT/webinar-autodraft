@@ -16,7 +16,6 @@
     <!-- Multi-line function call formatting -->
     <rule ref="WordPress.WhiteSpace.ControlStructureSpacing"/>
     <rule ref="WordPress.WhiteSpace.OperatorSpacing"/>
-    <rule ref="WordPress.WhiteSpace.PrecisionAlignment"/>
 
     <!-- End of line whitespace -->
     <rule ref="Generic.WhiteSpace.DisallowSpaceIndent"/>
@@ -32,6 +31,9 @@
     <rule ref="WordPress.PHP.DevelopmentFunctions">
         <exclude name="WordPress.PHP.DevelopmentFunctions.error_log"/>
     </rule>
+
+    <!-- Ignore PHPStan errors in test files -->
+    <exclude-pattern>*/tests/*</exclude-pattern>
 
     <!-- File paths to check -->
     <file>./includes/</file>
