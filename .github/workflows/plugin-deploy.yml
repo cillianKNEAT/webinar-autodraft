@@ -29,10 +29,12 @@ jobs:
         php-version: '7.2'
         extensions: mbstring, xml, ctype, iconv, intl, pdo_sqlite, mysql, mysqli, pgsql, curl, libxml, zip, pcntl, pdo, sqlite3, pdo_mysql, pdo_pgsql, mbstring, gd, exif, zip, calendar, dom, iconv, json, mbstring, pdo, pdo_sqlite, session, sqlite3, timezonedb, tokenizer, xml, ctype, fileinfo, intl, json, mbstring, pdo, session, tokenizer, xml, zip
         coverage: xdebug
-        tools: svn
     
     - name: Install Composer dependencies
       run: composer install --prefer-dist --no-progress
+    
+    - name: Install SVN
+      run: sudo apt-get update && sudo apt-get install -y subversion
     
     - name: Make install script executable
       run: chmod +x bin/install-wp-tests.sh
