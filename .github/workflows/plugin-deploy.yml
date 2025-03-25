@@ -49,16 +49,28 @@ jobs:
     
     - name: Prepare WordPress Test Environment
       run: |
-        # Create directories
-        mkdir -p /tmp/wordpress-tests-lib
-        mkdir -p /tmp/wordpress
+        # Create directories with proper permissions
+        sudo mkdir -p /tmp/wordpress-tests-lib
+        sudo mkdir -p /tmp/wordpress
+        sudo chown -R $USER:$USER /tmp/wordpress-tests-lib
+        sudo chown -R $USER:$USER /tmp/wordpress
+        
+        # Set environment variables
+        export WP_TESTS_DIR=/tmp/wordpress-tests-lib
+        export WP_CORE_DIR=/tmp/wordpress
         
         # Download WordPress core
-        wp core download --path=/tmp/wordpress --allow-root
+        wp core download --path=$WP_CORE_DIR --allow-root
         
         # Verify WordPress core files
-        if [ ! -f "/tmp/wordpress/wp-settings.php" ]; then
-          echo "WordPress core files not downloaded correctly"
+        echo "Verifying WordPress core files..."
+        ls -la $WP_CORE_DIR/
+        if [ ! -f "$WP_CORE_DIR/wp-settings.php" ]; then
+          echo "Error: WordPress core files not downloaded correctly"
+          exit 1
+        fi
+        if [ ! -d "$WP_CORE_DIR/wp-includes" ]; then
+          echo "Error: WordPress includes directory not found"
           exit 1
         fi
         
@@ -66,12 +78,15 @@ jobs:
         sudo apt-get update
         sudo apt-get install -y subversion
         
+        # Create test directories with proper permissions
+        mkdir -p $WP_TESTS_DIR/includes
+        mkdir -p $WP_TESTS_DIR/data
+        
         # Download WordPress test suite
         svn co --quiet https://develop.svn.wordpress.org/trunk/tests/phpunit/includes/ $WP_TESTS_DIR/includes
         svn co --quiet https://develop.svn.wordpress.org/trunk/tests/phpunit/data/ $WP_TESTS_DIR/data
         
         # Download critical test files directly
-        mkdir -p $WP_TESTS_DIR/includes
         curl -s https://raw.githubusercontent.com/WordPress/wordpress-develop/trunk/tests/phpunit/includes/functions.php > $WP_TESTS_DIR/includes/functions.php
         curl -s https://raw.githubusercontent.com/WordPress/wordpress-develop/trunk/tests/phpunit/includes/bootstrap.php > $WP_TESTS_DIR/includes/bootstrap.php
         
@@ -92,18 +107,22 @@ jobs:
         
         # Create wp-tests-config.php
         wp config create \
-          --path=/tmp/wordpress-tests-lib \
+          --path=$WP_TESTS_DIR \
           --dbname=wordpress_test \
           --dbuser=root \
           --dbpass=root \
           --dbhost=127.0.0.1 \
           --allow-root
         
-        # Verify test files
-        if [ ! -f "/tmp/wordpress-tests-lib/includes/functions.php" ]; then
-          echo "WordPress test files not downloaded correctly"
+        # Verify test configuration
+        if [ ! -f "$WP_TESTS_DIR/wp-tests-config.php" ]; then
+          echo "Error: WordPress test configuration not created"
           exit 1
         fi
+        
+        # Set proper permissions
+        sudo chown -R $USER:$USER $WP_TESTS_DIR
+        sudo chown -R $USER:$USER $WP_CORE_DIR
     
     - name: Run PHPUnit with Coverage
       run: |
