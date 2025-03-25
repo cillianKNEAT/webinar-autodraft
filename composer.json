@@ -1,5 +1,5 @@
 {
-    "name": "cillianKNEAT/webinar-autodraft",
+    "name": "cilliankneat/webinar-autodraft",
     "description": "A WordPress plugin that automatically reverts webinar posts to draft status when their date has passed.",
     "type": "wordpress-plugin",
     "license": "GPL-2.0-or-later",
@@ -37,5 +37,6 @@
         "allow-plugins": {
             "dealerdirect/phpcodesniffer-composer-installer": true
         }
-    }
+    },
+    "minimum-stability": "stable"
 } 
