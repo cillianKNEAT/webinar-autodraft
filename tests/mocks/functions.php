@@ -1,8 +1,8 @@
-<?php
 /**
  * Mock ACF functions for testing
  *
  * @package WebinarAutoDraft
+ * @since 1.0
  */
 
 require_once __DIR__ . '/class-mock-acf.php';
