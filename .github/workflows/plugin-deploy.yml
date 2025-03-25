@@ -78,7 +78,8 @@ jobs:
         
         # Download WordPress core with verbose output
         echo "Downloading WordPress core..."
-        wp core download --path=/tmp/wordpress --allow-root --debug
+        cd /tmp/wordpress
+        wp core download --allow-root --debug
         
         # Verify WordPress core files
         echo "Verifying WordPress core files..."
@@ -160,6 +161,7 @@ jobs:
         
         # Install test suite
         echo "Installing plugin test suite..."
+        cd $GITHUB_WORKSPACE
         wp scaffold plugin-tests ${{ github.event.repository.name }} --allow-root
         
         # Create wp-tests-config.php
