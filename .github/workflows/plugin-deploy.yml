@@ -77,6 +77,11 @@ jobs:
         svn co --quiet https://develop.svn.wordpress.org/trunk/tests/phpunit/includes/ $WP_TESTS_DIR/includes
         svn co --quiet https://develop.svn.wordpress.org/trunk/tests/phpunit/data/ $WP_TESTS_DIR/data
         
+        # Download additional test files
+        echo "Downloading additional test files..."
+        curl -o $WP_TESTS_DIR/includes/functions.php https://raw.githubusercontent.com/WordPress/wordpress-develop/trunk/tests/phpunit/includes/functions.php
+        curl -o $WP_TESTS_DIR/includes/bootstrap.php https://raw.githubusercontent.com/WordPress/wordpress-develop/trunk/tests/phpunit/includes/bootstrap.php
+        
         # Verify WordPress core files
         echo "Verifying WordPress core files..."
         if [ ! -f "$WP_CORE_DIR/wp-settings.php" ]; then
@@ -107,6 +112,10 @@ jobs:
           ls -la $WP_TESTS_DIR/includes
           exit 1
         fi
+        
+        # List all test files for debugging
+        echo "Test directory contents:"
+        ls -la $WP_TESTS_DIR/includes/
     
     - name: Run PHPUnit
       run: composer phpunit

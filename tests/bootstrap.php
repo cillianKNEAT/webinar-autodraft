@@ -11,17 +11,33 @@ if ( ! $_tests_dir ) {
 	$_tests_dir = rtrim( sys_get_temp_dir(), '/\\' ) . '/wordpress-tests-lib';
 }
 
+// Ensure the test directory exists
+if ( ! is_dir( $_tests_dir ) ) {
+	echo "Test directory not found: $_tests_dir\n";
+	exit( 1 );
+}
+
+// Ensure the includes directory exists
+if ( ! is_dir( $_tests_dir . '/includes' ) ) {
+	echo "Includes directory not found: $_tests_dir/includes\n";
+	exit( 1 );
+}
+
+// Ensure functions.php exists
 if ( ! file_exists( $_tests_dir . '/includes/functions.php' ) ) {
-	echo esc_html( "Could not find $_tests_dir/includes/functions.php\n" );
+	echo "functions.php not found in $_tests_dir/includes/\n";
 	echo "Current directory: " . getcwd() . "\n";
 	echo "Environment variables:\n";
 	print_r( getenv() );
+	echo "\nDirectory contents:\n";
+	print_r( scandir( $_tests_dir . '/includes' ) );
 	exit( 1 );
 }
 
 // Load PHPUnit Polyfills.
 require_once dirname( __DIR__ ) . '/vendor/yoast/phpunit-polyfills/phpunitpolyfills-autoload.php';
 
+// Load WordPress test functions
 require_once $_tests_dir . '/includes/functions.php';
 
 /**
