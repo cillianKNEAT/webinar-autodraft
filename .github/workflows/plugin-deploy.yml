@@ -108,6 +108,19 @@ jobs:
         
         # Verify wp-includes directory
         echo "Verifying wp-includes directory..."
+        if [ ! -d "$WP_CORE_DIR/wp-includes" ]; then
+          echo "wp-includes directory not found"
+          echo "Directory contents:"
+          ls -la $WP_CORE_DIR
+          exit 1
+        fi
+        
+        # Download wp-includes files directly if needed
+        echo "Downloading wp-includes files..."
+        curl -L -o $WP_CORE_DIR/wp-includes/class-wp-phpmailer.php https://raw.githubusercontent.com/WordPress/wordpress-develop/trunk/src/wp-includes/class-wp-phpmailer.php
+        
+        # Verify wp-includes files
+        echo "Verifying wp-includes files..."
         if [ ! -f "$WP_CORE_DIR/wp-includes/class-wp-phpmailer.php" ]; then
           echo "Required WordPress includes file not found: class-wp-phpmailer.php"
           echo "wp-includes directory contents:"
