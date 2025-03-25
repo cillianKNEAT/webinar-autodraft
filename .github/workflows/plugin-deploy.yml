@@ -50,6 +50,7 @@ jobs:
     - name: Prepare WordPress Test Environment
       run: |
         # Create directories with proper permissions
+        echo "Creating directories..."
         sudo mkdir -p /tmp/wordpress-tests-lib
         sudo mkdir -p /tmp/wordpress
         sudo chown -R $USER:$USER /tmp/wordpress-tests-lib
@@ -59,55 +60,112 @@ jobs:
         export WP_TESTS_DIR=/tmp/wordpress-tests-lib
         export WP_CORE_DIR=/tmp/wordpress
         
-        # Download WordPress core
-        wp core download --path=$WP_CORE_DIR --allow-root
+        # Verify directory permissions and structure
+        echo "Checking directory permissions and structure..."
+        ls -la /tmp/
+        if [ ! -w "/tmp/wordpress" ]; then
+          echo "Error: WordPress directory is not writable"
+          sudo chown -R $USER:$USER /tmp/wordpress
+          if [ ! -w "/tmp/wordpress" ]; then
+            echo "Error: Failed to set WordPress directory permissions"
+            exit 1
+          fi
+        fi
+        
+        # Clean up any existing WordPress files
+        echo "Cleaning up existing WordPress files..."
+        rm -rf /tmp/wordpress/*
+        
+        # Download WordPress core with verbose output
+        echo "Downloading WordPress core..."
+        wp core download --path=/tmp/wordpress --allow-root --debug
         
         # Verify WordPress core files
         echo "Verifying WordPress core files..."
-        ls -la $WP_CORE_DIR/
-        if [ ! -f "$WP_CORE_DIR/wp-settings.php" ]; then
-          echo "Error: WordPress core files not downloaded correctly"
-          exit 1
-        fi
-        if [ ! -d "$WP_CORE_DIR/wp-includes" ]; then
+        ls -la /tmp/wordpress/
+        
+        # Check for critical WordPress files
+        CRITICAL_FILES=(
+          "wp-settings.php"
+          "wp-config-sample.php"
+          "wp-includes/version.php"
+          "wp-includes/functions.php"
+        )
+        
+        for file in "${CRITICAL_FILES[@]}"; do
+          if [ ! -f "/tmp/wordpress/$file" ]; then
+            echo "Error: Critical WordPress file not found: $file"
+            echo "Directory contents:"
+            ls -la "/tmp/wordpress/${file%/*}"
+            exit 1
+          fi
+        done
+        
+        # Verify wp-includes directory
+        if [ ! -d "/tmp/wordpress/wp-includes" ]; then
           echo "Error: WordPress includes directory not found"
+          echo "Directory contents:"
+          ls -la /tmp/wordpress/
           exit 1
         fi
         
         # Install WordPress test suite
+        echo "Installing WordPress test suite..."
         sudo apt-get update
         sudo apt-get install -y subversion
         
         # Create test directories with proper permissions
-        mkdir -p $WP_TESTS_DIR/includes
-        mkdir -p $WP_TESTS_DIR/data
+        echo "Creating test directories..."
+        mkdir -p /tmp/wordpress-tests-lib/includes
+        mkdir -p /tmp/wordpress-tests-lib/data
+        
+        # Verify test directories
+        if [ ! -w "/tmp/wordpress-tests-lib/includes" ]; then
+          echo "Error: Test includes directory is not writable"
+          sudo chown -R $USER:$USER /tmp/wordpress-tests-lib
+          if [ ! -w "/tmp/wordpress-tests-lib/includes" ]; then
+            echo "Error: Failed to set test directory permissions"
+            exit 1
+          fi
+        fi
         
         # Download WordPress test suite
-        svn co --quiet https://develop.svn.wordpress.org/trunk/tests/phpunit/includes/ $WP_TESTS_DIR/includes
-        svn co --quiet https://develop.svn.wordpress.org/trunk/tests/phpunit/data/ $WP_TESTS_DIR/data
+        echo "Downloading WordPress test suite..."
+        svn co --quiet https://develop.svn.wordpress.org/trunk/tests/phpunit/includes/ /tmp/wordpress-tests-lib/includes
+        svn co --quiet https://develop.svn.wordpress.org/trunk/tests/phpunit/data/ /tmp/wordpress-tests-lib/data
         
         # Download critical test files directly
-        curl -s https://raw.githubusercontent.com/WordPress/wordpress-develop/trunk/tests/phpunit/includes/functions.php > $WP_TESTS_DIR/includes/functions.php
-        curl -s https://raw.githubusercontent.com/WordPress/wordpress-develop/trunk/tests/phpunit/includes/bootstrap.php > $WP_TESTS_DIR/includes/bootstrap.php
+        echo "Downloading critical test files..."
+        curl -s https://raw.githubusercontent.com/WordPress/wordpress-develop/trunk/tests/phpunit/includes/functions.php > /tmp/wordpress-tests-lib/includes/functions.php
+        curl -s https://raw.githubusercontent.com/WordPress/wordpress-develop/trunk/tests/phpunit/includes/bootstrap.php > /tmp/wordpress-tests-lib/includes/bootstrap.php
         
         # Verify test files
         echo "Verifying test files..."
-        ls -la $WP_TESTS_DIR/includes/
-        if [ ! -f "$WP_TESTS_DIR/includes/functions.php" ]; then
-          echo "Error: functions.php not found"
-          exit 1
-        fi
-        if [ ! -f "$WP_TESTS_DIR/includes/bootstrap.php" ]; then
-          echo "Error: bootstrap.php not found"
-          exit 1
-        fi
+        ls -la /tmp/wordpress-tests-lib/includes/
+        
+        # Check for critical test files
+        CRITICAL_TEST_FILES=(
+          "functions.php"
+          "bootstrap.php"
+        )
+        
+        for file in "${CRITICAL_TEST_FILES[@]}"; do
+          if [ ! -f "/tmp/wordpress-tests-lib/includes/$file" ]; then
+            echo "Error: Critical test file not found: $file"
+            echo "Directory contents:"
+            ls -la /tmp/wordpress-tests-lib/includes/
+            exit 1
+          fi
+        done
         
         # Install test suite
+        echo "Installing plugin test suite..."
         wp scaffold plugin-tests ${{ github.event.repository.name }} --allow-root
         
         # Create wp-tests-config.php
+        echo "Creating test configuration..."
         wp config create \
-          --path=$WP_TESTS_DIR \
+          --path=/tmp/wordpress-tests-lib \
           --dbname=wordpress_test \
           --dbuser=root \
           --dbpass=root \
@@ -115,14 +173,22 @@ jobs:
           --allow-root
         
         # Verify test configuration
-        if [ ! -f "$WP_TESTS_DIR/wp-tests-config.php" ]; then
+        if [ ! -f "/tmp/wordpress-tests-lib/wp-tests-config.php" ]; then
           echo "Error: WordPress test configuration not created"
+          echo "Directory contents:"
+          ls -la /tmp/wordpress-tests-lib/
           exit 1
         fi
         
-        # Set proper permissions
-        sudo chown -R $USER:$USER $WP_TESTS_DIR
-        sudo chown -R $USER:$USER $WP_CORE_DIR
+        # Set final permissions
+        echo "Setting final permissions..."
+        sudo chown -R $USER:$USER /tmp/wordpress-tests-lib
+        sudo chown -R $USER:$USER /tmp/wordpress
+        
+        # Final verification
+        echo "Performing final verification..."
+        ls -la /tmp/wordpress/
+        ls -la /tmp/wordpress-tests-lib/
     
     - name: Run PHPUnit with Coverage
       run: |
