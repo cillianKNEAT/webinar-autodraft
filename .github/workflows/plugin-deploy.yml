@@ -47,7 +47,14 @@ jobs:
     
     - name: Install WordPress test suite
       run: |
-        bash bin/install-wp-tests.sh wordpress_test root root 127.0.0.1 6.4.3
+        WP_TESTS_DIR=/tmp/wordpress-tests-lib
+        WP_CORE_DIR=/tmp/wordpress/
+        mkdir -p $WP_TESTS_DIR
+        mkdir -p $WP_CORE_DIR
+        svn co --quiet https://develop.svn.wordpress.org/trunk/tests/phpunit/includes/ $WP_TESTS_DIR/includes
+        svn co --quiet https://develop.svn.wordpress.org/trunk/tests/phpunit/data/ $WP_TESTS_DIR/data
+        svn co --quiet https://develop.svn.wordpress.org/trunk/ $WP_CORE_DIR
+        bash bin/install-wp-tests.sh wordpress_test root root 127.0.0.1 trunk
     
     - name: Run PHPCS
       run: composer phpcs
