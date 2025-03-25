@@ -106,6 +106,15 @@ jobs:
           fi
         done
         
+        # Verify wp-includes directory
+        echo "Verifying wp-includes directory..."
+        if [ ! -f "$WP_CORE_DIR/wp-includes/class-wp-phpmailer.php" ]; then
+          echo "Required WordPress includes file not found: class-wp-phpmailer.php"
+          echo "wp-includes directory contents:"
+          ls -la "$WP_CORE_DIR/wp-includes"
+          exit 1
+        fi
+        
         # Download test suite files
         echo "Downloading WordPress test suite..."
         svn co --quiet https://develop.svn.wordpress.org/trunk/tests/phpunit/includes/ $WP_TESTS_DIR/includes
@@ -156,6 +165,11 @@ jobs:
         # Print wp-tests-config.php contents for debugging
         echo "wp-tests-config.php contents:"
         cat "$WP_TESTS_DIR/wp-tests-config.php"
+        
+        # Verify file permissions
+        echo "Verifying file permissions..."
+        chmod -R 755 "$WP_CORE_DIR"
+        chmod -R 755 "$WP_TESTS_DIR"
     
     - name: Run PHPUnit
       run: composer phpunit

@@ -20,6 +20,17 @@ if [ ! -d "$WP_CORE_DIR" ]; then
     exit 1
 fi
 
+# Verify WordPress core files
+if [ ! -f "$WP_CORE_DIR/wp-settings.php" ]; then
+    echo "Error: WordPress core files not found in $WP_CORE_DIR"
+    exit 1
+fi
+
+if [ ! -f "$WP_CORE_DIR/wp-includes/class-wp-phpmailer.php" ]; then
+    echo "Error: WordPress includes files not found in $WP_CORE_DIR/wp-includes"
+    exit 1
+fi
+
 # Create wp-tests-config.php
 cat > "$WP_TESTS_DIR/wp-tests-config.php" << EOF
 <?php
@@ -63,6 +74,9 @@ define( 'WP_TESTS_MULTISITE', false );
 
 // Set the table prefix
 \$table_prefix = 'wp_';
+
+// Ensure WordPress core files are loaded
+require_once ABSPATH . 'wp-settings.php';
 EOF
 
 # Verify the config file was created
