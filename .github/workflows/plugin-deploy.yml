@@ -45,6 +45,12 @@ jobs:
           sleep 1
         done
     
+    - name: Check and create database
+      run: |
+        if ! mysql -u root -proot -h 127.0.0.1 -e "SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME = 'wordpress_test'" | grep -q wordpress_test; then
+          mysqladmin create wordpress_test -u root -proot -h 127.0.0.1
+        fi
+    
     - name: Install WordPress test suite
       run: |
         WP_TESTS_DIR=/tmp/wordpress-tests-lib
