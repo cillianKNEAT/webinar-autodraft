@@ -54,23 +54,57 @@ jobs:
     - name: Install WordPress test suite
       run: |
         WP_TESTS_DIR=/tmp/wordpress-tests-lib
-        WP_CORE_DIR=/tmp/wordpress/
+        WP_CORE_DIR=/tmp/wordpress
         TEMP_DIR=/tmp/wordpress-temp
         
         # Create directories
+        echo "Creating directories..."
         mkdir -p $WP_TESTS_DIR
         mkdir -p $WP_CORE_DIR
         mkdir -p $TEMP_DIR
         
         # Download WordPress core files
         echo "Downloading WordPress core files..."
-        curl -O https://wordpress.org/latest.tar.gz
-        tar -xzf latest.tar.gz -C $TEMP_DIR
+        curl -L -o wordpress.tar.gz https://wordpress.org/latest.tar.gz
+        
+        # Extract WordPress core files
+        echo "Extracting WordPress core files..."
+        tar -xzf wordpress.tar.gz -C $TEMP_DIR
         
         # Move WordPress files to the correct location
         echo "Moving WordPress files..."
-        mv $TEMP_DIR/wordpress/* $WP_CORE_DIR/
-        rm -rf $TEMP_DIR latest.tar.gz
+        cp -r $TEMP_DIR/wordpress/* $WP_CORE_DIR/
+        
+        # Clean up temporary files
+        echo "Cleaning up temporary files..."
+        rm -rf $TEMP_DIR wordpress.tar.gz
+        
+        # Verify WordPress core files
+        echo "Verifying WordPress core files..."
+        if [ ! -f "$WP_CORE_DIR/wp-settings.php" ]; then
+          echo "WordPress core files not downloaded correctly"
+          echo "Directory contents:"
+          ls -la $WP_CORE_DIR
+          exit 1
+        fi
+        
+        # Verify WordPress core directory structure
+        echo "Verifying WordPress core directory structure..."
+        required_files=(
+          "wp-settings.php"
+          "wp-config-sample.php"
+          "wp-includes"
+          "wp-admin"
+        )
+        
+        for file in "${required_files[@]}"; do
+          if [ ! -e "$WP_CORE_DIR/$file" ]; then
+            echo "Required WordPress file/directory not found: $file"
+            echo "Directory contents:"
+            ls -la $WP_CORE_DIR
+            exit 1
+          fi
+        done
         
         # Download test suite files
         echo "Downloading WordPress test suite..."
@@ -81,15 +115,6 @@ jobs:
         echo "Downloading additional test files..."
         curl -o $WP_TESTS_DIR/includes/functions.php https://raw.githubusercontent.com/WordPress/wordpress-develop/trunk/tests/phpunit/includes/functions.php
         curl -o $WP_TESTS_DIR/includes/bootstrap.php https://raw.githubusercontent.com/WordPress/wordpress-develop/trunk/tests/phpunit/includes/bootstrap.php
-        
-        # Verify WordPress core files
-        echo "Verifying WordPress core files..."
-        if [ ! -f "$WP_CORE_DIR/wp-settings.php" ]; then
-          echo "WordPress core files not downloaded correctly"
-          echo "Directory contents:"
-          ls -la $WP_CORE_DIR
-          exit 1
-        fi
         
         # Install test suite
         echo "Installing WordPress test suite..."
@@ -116,6 +141,10 @@ jobs:
         # List all test files for debugging
         echo "Test directory contents:"
         ls -la $WP_TESTS_DIR/includes/
+        
+        # Print final directory structure for debugging
+        echo "Final WordPress core directory structure:"
+        ls -la $WP_CORE_DIR
     
     - name: Run PHPUnit
       run: composer phpunit

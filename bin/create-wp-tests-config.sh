@@ -3,6 +3,24 @@
 WP_TESTS_DIR=$1
 WP_CORE_DIR=$2
 
+# Verify input parameters
+if [ -z "$WP_TESTS_DIR" ] || [ -z "$WP_CORE_DIR" ]; then
+    echo "Error: WP_TESTS_DIR and WP_CORE_DIR must be provided"
+    exit 1
+fi
+
+# Ensure directories exist
+if [ ! -d "$WP_TESTS_DIR" ]; then
+    echo "Error: Test directory not found: $WP_TESTS_DIR"
+    exit 1
+fi
+
+if [ ! -d "$WP_CORE_DIR" ]; then
+    echo "Error: WordPress core directory not found: $WP_CORE_DIR"
+    exit 1
+fi
+
+# Create wp-tests-config.php
 cat > "$WP_TESTS_DIR/wp-tests-config.php" << 'EOF'
 <?php
 // Force known values to be used by WP tests.
@@ -42,4 +60,12 @@ define( 'WP_TESTS_DEBUG', false );
 
 // Set the WordPress test suite multisite mode.
 define( 'WP_TESTS_MULTISITE', false );
-EOF 
+EOF
+
+# Verify the config file was created
+if [ ! -f "$WP_TESTS_DIR/wp-tests-config.php" ]; then
+    echo "Error: Failed to create wp-tests-config.php"
+    exit 1
+fi
+
+echo "Successfully created wp-tests-config.php" 
