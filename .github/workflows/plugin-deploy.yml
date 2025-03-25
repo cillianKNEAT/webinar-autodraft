@@ -189,7 +189,19 @@ jobs:
     - name: Run PHPUnit with coverage
       run: |
         mkdir -p tests/coverage
-        XDEBUG_MODE=coverage vendor/bin/phpunit --coverage-html tests/coverage --coverage-clover tests/coverage.xml
+        XDEBUG_MODE=coverage vendor/bin/phpunit --coverage-html tests/coverage --coverage-clover tests/coverage.xml --configuration phpunit.xml.dist
+        
+        # Verify coverage files were created
+        if [ ! -f "tests/coverage.xml" ]; then
+          echo "Coverage file not generated"
+          echo "Directory contents:"
+          ls -la tests/
+          exit 1
+        fi
+        
+        # Print coverage file contents for debugging
+        echo "Coverage file contents:"
+        cat tests/coverage.xml
     
     - name: Upload coverage reports
       uses: codecov/codecov-action@v3
@@ -198,6 +210,8 @@ jobs:
         fail_ci_if_error: true
         verbose: true
         token: ${{ secrets.CODECOV_TOKEN }}
+        flags: unittests
+        name: codecov-umbrella
 
   deploy:
     needs: test

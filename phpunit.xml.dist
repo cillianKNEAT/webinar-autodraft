@@ -1,0 +1,29 @@
+<?xml version="1.0"?>
+<phpunit
+    bootstrap="tests/bootstrap.php"
+    backupGlobals="false"
+    colors="true"
+    convertErrorsToExceptions="true"
+    convertNoticesToExceptions="true"
+    convertWarningsToExceptions="true"
+    >
+    <testsuites>
+        <testsuite name="WebinarAutoDraft">
+            <directory prefix="test-" suffix=".php">./tests/</directory>
+        </testsuite>
+    </testsuites>
+    <coverage processUncoveredFiles="true">
+        <include>
+            <directory suffix=".php">./includes</directory>
+        </include>
+        <exclude>
+            <directory suffix=".php">./tests</directory>
+            <directory suffix=".php">./vendor</directory>
+            <file>./webinar-autodraft.php</file>
+        </exclude>
+        <report>
+            <html outputDirectory="tests/coverage"/>
+            <clover outputFile="tests/coverage.xml"/>
+        </report>
+    </coverage>
+</phpunit> 
