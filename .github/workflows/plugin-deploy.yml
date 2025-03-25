@@ -47,7 +47,6 @@ jobs:
         composer install --prefer-dist --no-progress --no-dev
         composer update --prefer-stable
     
-    - # Ensure this section is properly defined
     - name: Prepare WordPress Test Environment
       run: |
         # Create directories with proper permissions
