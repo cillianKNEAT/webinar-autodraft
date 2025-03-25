@@ -112,22 +112,56 @@ jobs:
                 # Extract to temporary location first
                 tar -xzf "$TEMP_DIR/wordpress.tar.gz" -C "$TEMP_DIR"
                 
+                # Verify extraction
+                echo "Verifying extracted files..."
+                if [ ! -d "$TEMP_DIR/wordpress/wp-includes" ]; then
+                  echo "Error: wp-includes directory not found in extracted files"
+                  echo "Extracted directory contents:"
+                  ls -la "$TEMP_DIR/wordpress/"
+                  rm -rf "$TEMP_DIR"
+                  return 1
+                fi
+                
                 # Move files to final location
                 echo "Moving files to final location..."
+                # First, ensure target directory is empty
+                rm -rf /tmp/wordpress/*
+                # Then move files
                 mv "$TEMP_DIR/wordpress"/* /tmp/wordpress/
+                
+                # Verify wp-includes directory after move
+                echo "Verifying wp-includes directory after move..."
+                if [ ! -d "/tmp/wordpress/wp-includes" ]; then
+                  echo "Error: wp-includes directory not found after move"
+                  echo "Target directory contents:"
+                  ls -la /tmp/wordpress/
+                  rm -rf "$TEMP_DIR"
+                  return 1
+                fi
                 
                 # Clean up
                 rm -rf "$TEMP_DIR"
                 
-                # Verify download success
-                if [ -f "/tmp/wordpress/wp-settings.php" ]; then
-                  echo "WordPress downloaded and extracted successfully!"
-                  return 0
-                else
-                  echo "Download completed but wp-settings.php not found"
-                  echo "Directory contents:"
-                  ls -la /tmp/wordpress/
-                fi
+                # Verify download success and critical files
+                echo "Verifying critical files..."
+                CRITICAL_FILES=(
+                  "wp-settings.php"
+                  "wp-includes/version.php"
+                  "wp-includes/functions.php"
+                  "wp-includes/class-wp-phpmailer.php"
+                )
+                
+                for file in "${CRITICAL_FILES[@]}"; do
+                  if [ ! -f "/tmp/wordpress/$file" ]; then
+                    echo "Error: Critical file not found: $file"
+                    echo "Directory contents:"
+                    ls -la "/tmp/wordpress/${file%/*}"
+                    return 1
+                  fi
+                done
+                
+                echo "WordPress downloaded and extracted successfully!"
+                return 0
               else
                 echo "Download failed with exit code $?"
                 echo "Cleaning up temporary files..."
