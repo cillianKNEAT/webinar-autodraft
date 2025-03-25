@@ -33,6 +33,8 @@ jobs:
         php-version: '7.4'
         extensions: mbstring, xml, ctype, iconv, intl, pdo_sqlite, mysql, mysqli, pgsql, curl, libxml, zip, pcntl, pdo, sqlite3, pdo_mysql, pdo_pgsql, mbstring, gd, exif, zip, calendar, dom, iconv, json, mbstring, pdo, pdo_sqlite, session, sqlite3, timezonedb, tokenizer, xml, ctype, fileinfo, intl, json, mbstring, pdo, session, tokenizer, xml, zip, simplexml
         coverage: xdebug
+        xdebug-version: '3.1.6'
+        xdebug-mode: coverage
     
     - name: Install Composer dependencies
       run: |
@@ -184,14 +186,18 @@ jobs:
         chmod -R 755 "$WP_CORE_DIR"
         chmod -R 755 "$WP_TESTS_DIR"
     
-    - name: Run PHPUnit
-      run: composer phpunit
+    - name: Run PHPUnit with coverage
+      run: |
+        mkdir -p tests/coverage
+        XDEBUG_MODE=coverage vendor/bin/phpunit --coverage-html tests/coverage --coverage-clover tests/coverage.xml
     
     - name: Upload coverage reports
       uses: codecov/codecov-action@v3
       with:
         file: ./tests/coverage.xml
         fail_ci_if_error: true
+        verbose: true
+        token: ${{ secrets.CODECOV_TOKEN }}
 
   deploy:
     needs: test
