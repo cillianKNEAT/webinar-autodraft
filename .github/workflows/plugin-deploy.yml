@@ -59,21 +59,29 @@ jobs:
         mkdir -p $WP_CORE_DIR
         
         # Download WordPress core files
-        svn co --quiet https://develop.svn.wordpress.org/trunk/ $WP_CORE_DIR
+        echo "Downloading WordPress core files..."
+        curl -O https://wordpress.org/latest.tar.gz
+        tar -xzf latest.tar.gz -C /tmp/
+        mv /tmp/wordpress/* $WP_CORE_DIR/
+        rm -rf /tmp/wordpress latest.tar.gz
         
         # Download test suite files
+        echo "Downloading WordPress test suite..."
         svn co --quiet https://develop.svn.wordpress.org/trunk/tests/phpunit/includes/ $WP_TESTS_DIR/includes
         svn co --quiet https://develop.svn.wordpress.org/trunk/tests/phpunit/data/ $WP_TESTS_DIR/data
         
         # Verify WordPress core files
+        echo "Verifying WordPress core files..."
         if [ ! -f "$WP_CORE_DIR/wp-settings.php" ]; then
           echo "WordPress core files not downloaded correctly"
+          echo "Directory contents:"
           ls -la $WP_CORE_DIR
           exit 1
         fi
         
         # Install test suite
-        bash bin/install-wp-tests.sh wordpress_test root root 127.0.0.1 trunk
+        echo "Installing WordPress test suite..."
+        bash bin/install-wp-tests.sh wordpress_test root root 127.0.0.1 latest
     
     - name: Run PHPUnit
       run: composer phpunit
