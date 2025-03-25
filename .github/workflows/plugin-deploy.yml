@@ -64,17 +64,34 @@ jobs:
         export WP_TESTS_DIR=/tmp/wordpress-tests-lib
         export WP_CORE_DIR=/tmp/wordpress
         
+        # Verify WordPress installation path
+        echo "Verifying WordPress installation path..."
+        echo "Current directory: $(pwd)"
+        echo "WP_CORE_DIR: $WP_CORE_DIR"
+        echo "WP_TESTS_DIR: $WP_TESTS_DIR"
+        
         # Check if WordPress is installed
-        echo "Checking WordPress installation..."
         if [ ! -f "/tmp/wordpress/wp-settings.php" ]; then
           echo "WordPress not found. Downloading..."
-          cd /tmp/wordpress
           
-          # Download WordPress core
-          wp core download --allow-root --debug
+          # Ensure we're in the correct directory
+          cd /tmp/wordpress
+          echo "Changed to directory: $(pwd)"
+          
+          # Download WordPress core with explicit path
+          wp core download --path=/tmp/wordpress --allow-root --debug
+          
+          # Verify download
+          if [ ! -f "/tmp/wordpress/wp-settings.php" ]; then
+            echo "Error: WordPress download failed"
+            echo "Directory contents:"
+            ls -la /tmp/wordpress/
+            exit 1
+          fi
           
           # Create wp-config.php
           wp config create \
+            --path=/tmp/wordpress \
             --dbname=wordpress_test \
             --dbuser=root \
             --dbpass=root \
@@ -91,6 +108,7 @@ jobs:
             "wp-config.php"
             "wp-includes/version.php"
             "wp-includes/functions.php"
+            "wp-includes/class-wp-phpmailer.php"
           )
           
           for file in "${CRITICAL_FILES[@]}"; do
