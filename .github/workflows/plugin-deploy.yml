@@ -1,0 +1,69 @@
+name: Plugin Deploy
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v2
+    
+    - name: Setup PHP
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: '7.2'
+        extensions: mbstring, xml, ctype, iconv, intl, pdo_sqlite, mysql, mysqli, pgsql, curl, libxml, zip, pcntl, pdo, sqlite3, pdo_mysql, pdo_pgsql, mbstring, gd, exif, zip, calendar, dom, iconv, json, mbstring, pdo, pdo_sqlite, session, sqlite3, timezonedb, tokenizer, xml, ctype, fileinfo, intl, json, mbstring, pdo, session, tokenizer, xml, zip
+        coverage: xdebug
+    
+    - name: Install Composer dependencies
+      run: composer install --prefer-dist --no-progress
+    
+    - name: Run PHPCS
+      run: composer phpcs
+    
+    - name: Run PHPUnit
+      run: composer phpunit
+    
+    - name: Upload coverage reports
+      uses: codecov/codecov-action@v3
+      with:
+        file: ./tests/coverage.xml
+        fail_ci_if_error: true
+
+  deploy:
+    needs: test
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    
+    steps:
+    - uses: actions/checkout@v2
+    
+    - name: Create Release
+      id: create_release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: v${{ github.run_number }}
+        release_name: Release v${{ github.run_number }}
+        draft: false
+        prerelease: false
+    
+    - name: Create ZIP file
+      run: |
+        zip -r webinar-autodraft.zip . -x "*.git*" -x "*.github*" -x "*.DS_Store" -x "*.idea*" -x "*.vscode*" -x "vendor/*" -x "tests/*" -x "composer.*" -x "phpunit.xml" -x "phpcs.xml" -x "phpcs.xml.dist" -x "phpunit.xml.dist" -x "README.md" -x "LICENSE"
+    
+    - name: Upload Release Asset
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ./webinar-autodraft.zip
+        asset_name: webinar-autodraft.zip
+        asset_content_type: application/zip 
