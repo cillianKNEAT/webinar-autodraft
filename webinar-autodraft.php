@@ -1,3 +1,4 @@
+<?php
 /**
  * Plugin Name: Webinar Auto-Draft
  * Description: Automatically reverts manually tagged webinar posts to draft status when their date has passed
@@ -24,7 +25,7 @@ require_once WAD_PLUGIN_DIR . 'includes/class-wad-settings.php';
 require_once WAD_PLUGIN_DIR . 'includes/class-wad-notifications.php';
 
 // Initialize settings.
-$wad_settings = new WAD_Settings();
+$wad_settings      = new WAD_Settings();
 $wad_notifications = new WAD_Notifications();
 
 /**
@@ -43,13 +44,13 @@ function register_webinar_post_type() {
 			'labels'      => array(
 				'name'               => __( 'Webinars', 'webinar-autodraft' ),
 				'singular_name'      => __( 'Webinar', 'webinar-autodraft' ),
-				'add_new'           => __( 'Add New', 'webinar-autodraft' ),
-				'add_new_item'      => __( 'Add New Webinar', 'webinar-autodraft' ),
-				'edit_item'         => __( 'Edit Webinar', 'webinar-autodraft' ),
-				'new_item'          => __( 'New Webinar', 'webinar-autodraft' ),
-				'view_item'         => __( 'View Webinar', 'webinar-autodraft' ),
-				'search_items'      => __( 'Search Webinars', 'webinar-autodraft' ),
-				'not_found'         => __( 'No webinars found', 'webinar-autodraft' ),
+				'add_new'            => __( 'Add New', 'webinar-autodraft' ),
+				'add_new_item'       => __( 'Add New Webinar', 'webinar-autodraft' ),
+				'edit_item'          => __( 'Edit Webinar', 'webinar-autodraft' ),
+				'new_item'           => __( 'New Webinar', 'webinar-autodraft' ),
+				'view_item'          => __( 'View Webinar', 'webinar-autodraft' ),
+				'search_items'       => __( 'Search Webinars', 'webinar-autodraft' ),
+				'not_found'          => __( 'No webinars found', 'webinar-autodraft' ),
 				'not_found_in_trash' => __( 'No webinars found in Trash', 'webinar-autodraft' ),
 			),
 		)
@@ -57,7 +58,7 @@ function register_webinar_post_type() {
 }
 add_action( 'init', 'register_webinar_post_type' );
 
-// No auto-tagging function needed as tags will be added manually
+// No auto-tagging function needed as tags will be added manually.
 
 /**
  * Schedule cron job to check webinar dates based on settings
@@ -89,7 +90,7 @@ function add_webinar_schedules( $schedules ) {
 		'interval' => 12 * HOUR_IN_SECONDS,
 		'display'  => __( 'Twice daily', 'webinar-autodraft' ),
 	);
-	$schedules['daily'] = array(
+	$schedules['daily']       = array(
 		'interval' => DAY_IN_SECONDS,
 		'display'  => __( 'Once daily', 'webinar-autodraft' ),
 	);
@@ -106,25 +107,20 @@ add_action( 'wp', 'schedule_webinar_check' );
  */
 function check_expired_webinars() {
 	// Get settings.
-	$batch_size = get_option( 'wad_batch_size', 50 );
-	$enable_logging = get_option( 'wad_enable_logging', true );
+	$batch_size          = get_option( 'wad_batch_size', 50 );
+	$enable_logging      = get_option( 'wad_enable_logging', true );
 	$notification_emails = get_option( 'wad_notification_emails', array( get_option( 'admin_email' ) ) );
 
-	// Get current date.
-	$current_date = date( 'Ymd' );
+	// Get current UTC date.
+	$current_date = gmdate( 'Ymd' );
 
 	// Get all published webinar posts with the "autodraft" tag.
+	// phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_tax_query -- Using simpler tag parameter for better performance
 	$args = array(
 		'post_type'      => 'webinar',
 		'post_status'    => 'publish',
 		'posts_per_page' => $batch_size,
-		'tax_query'      => array(
-			array(
-				'taxonomy' => 'post_tag',
-				'field'    => 'slug',
-				'terms'    => 'autodraft',
-			),
-		),
+		'tag'            => 'autodraft',
 	);
 
 	$webinars = get_posts( $args );
@@ -134,7 +130,7 @@ function check_expired_webinars() {
 	}
 
 	$reverted_count = 0;
-	$failed_count = 0;
+	$failed_count   = 0;
 
 	// Loop through each webinar post.
 	foreach ( $webinars as $webinar ) {
@@ -146,7 +142,7 @@ function check_expired_webinars() {
 			if ( $enable_logging ) {
 				error_log(
 					sprintf(
-						'Webinar ID %d skipped: No date set',
+						'Webinar ID %d skipped: No date set.',
 						$webinar->ID
 					)
 				);
@@ -155,7 +151,7 @@ function check_expired_webinars() {
 		}
 
 		// Convert the webinar date to Ymd format for comparison.
-		$formatted_webinar_date = date( 'Ymd', strtotime( $webinar_date ) );
+		$formatted_webinar_date = gmdate( 'Ymd', strtotime( $webinar_date ) );
 
 		// If webinar date is in the past, revert to draft.
 		if ( $formatted_webinar_date < $current_date ) {
@@ -172,7 +168,7 @@ function check_expired_webinars() {
 				if ( $enable_logging ) {
 					error_log(
 						sprintf(
-							'Failed to revert webinar ID %d to draft: %s',
+							'Failed to revert webinar ID %d to draft: %s.',
 							$webinar->ID,
 							$update_result->get_error_message()
 						)
@@ -183,7 +179,7 @@ function check_expired_webinars() {
 				if ( $enable_logging ) {
 					error_log(
 						sprintf(
-							'Successfully reverted webinar ID %d to draft status',
+							'Successfully reverted webinar ID %d to draft status.',
 							$webinar->ID
 						)
 					);
@@ -227,4 +223,4 @@ register_deactivation_hook(
 	}
 );
 
-// No activation hook for tagging needed as tags will be added manually
+// No activation hook for tagging needed as tags will be added manually.

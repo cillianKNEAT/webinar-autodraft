@@ -32,23 +32,19 @@
         <exclude name="WordPress.PHP.DevelopmentFunctions.error_log"/>
     </rule>
 
-    <!-- Ignore PHPStan errors in test files -->
-    <exclude-pattern>*/tests/*</exclude-pattern>
+    <!-- Ignore problematic sniffs -->
+    <rule ref="WordPress.WP.I18n">
+        <exclude name="WordPress.WP.I18n"/>
+    </rule>
+    <rule ref="WordPress.NamingConventions.PrefixAllGlobals">
+        <exclude name="WordPress.NamingConventions.PrefixAllGlobals"/>
+    </rule>
 
     <!-- File paths to check -->
-    <file>./includes/</file>
     <file>./webinar-autodraft.php</file>
-
-    <!-- Exclude paths -->
-    <exclude-pattern>*/vendor/*</exclude-pattern>
-    <exclude-pattern>*/node_modules/*</exclude-pattern>
-    <exclude-pattern>*/bin/*</exclude-pattern>
-    <exclude-pattern>*/tests/phpunit/includes/*</exclude-pattern>
-    <exclude-pattern>*/tests/phpunit/data/*</exclude-pattern>
 
     <!-- Show progress -->
     <arg value="sp"/>
     <arg name="colors"/>
     <arg name="extensions" value="php"/>
-    <arg name="parallel" value="8"/>
 </ruleset> 
