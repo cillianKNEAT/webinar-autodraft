@@ -29,8 +29,8 @@
         }
     },
     "scripts": {
-        "phpcs": "phpcs --standard=WordPress --extensions=php --report=full --colors -s ./includes/ ./webinar-autodraft.php ./tests/",
-        "phpcbf": "phpcbf --standard=WordPress --extensions=php ./includes/ ./webinar-autodraft.php ./tests/",
+        "phpcs": "phpcs --standard=phpcs.xml --extensions=php --report=full --colors -s",
+        "phpcbf": "phpcbf --standard=phpcs.xml --extensions=php",
         "phpunit": "phpunit"
     },
     "config": {
