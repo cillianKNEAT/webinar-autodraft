@@ -13,20 +13,6 @@
         </properties>
     </rule>
 
-    <!-- No spaces before opening parenthesis -->
-    <rule ref="Generic.Functions.FunctionCallArgumentSpacing">
-        <properties>
-            <property name="spacing" value="0"/>
-        </properties>
-    </rule>
-
-    <!-- One space after opening parenthesis -->
-    <rule ref="Generic.Functions.FunctionCallArgumentSpacing">
-        <properties>
-            <property name="spacing" value="1"/>
-        </properties>
-    </rule>
-
     <!-- Multi-line function call formatting -->
     <rule ref="WordPress.WhiteSpace.ControlStructureSpacing"/>
     <rule ref="WordPress.WhiteSpace.OperatorSpacing"/>
@@ -37,11 +23,7 @@
     <rule ref="Squiz.WhiteSpace.SuperfluousWhitespace"/>
 
     <!-- Inline comments -->
-    <rule ref="Squiz.Commenting.InlineComment">
-        <properties>
-            <property name="periodSpacing" value="1"/>
-        </properties>
-    </rule>
+    <rule ref="Squiz.Commenting.InlineComment"/>
 
     <!-- Newline at end of file -->
     <rule ref="Generic.Files.EndFileNewline"/>
@@ -61,4 +43,10 @@
     <exclude-pattern>*/bin/*</exclude-pattern>
     <exclude-pattern>*/tests/phpunit/includes/*</exclude-pattern>
     <exclude-pattern>*/tests/phpunit/data/*</exclude-pattern>
+
+    <!-- Show progress -->
+    <arg value="sp"/>
+    <arg name="colors"/>
+    <arg name="extensions" value="php"/>
+    <arg name="parallel" value="8"/>
 </ruleset> 
