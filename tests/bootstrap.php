@@ -13,6 +13,9 @@ if ( ! $_tests_dir ) {
 
 if ( ! file_exists( $_tests_dir . '/includes/functions.php' ) ) {
 	echo esc_html( "Could not find $_tests_dir/includes/functions.php\n" );
+	echo "Current directory: " . getcwd() . "\n";
+	echo "Environment variables:\n";
+	print_r( getenv() );
 	exit( 1 );
 }
 

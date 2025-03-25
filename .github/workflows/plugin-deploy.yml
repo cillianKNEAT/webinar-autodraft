@@ -94,6 +94,19 @@ jobs:
         echo "Creating wp-tests-config.php..."
         chmod +x bin/create-wp-tests-config.sh
         bin/create-wp-tests-config.sh $WP_TESTS_DIR $WP_CORE_DIR
+        
+        # Set environment variables for PHPUnit
+        echo "WP_TESTS_DIR=$WP_TESTS_DIR" >> $GITHUB_ENV
+        echo "WP_CORE_DIR=$WP_CORE_DIR" >> $GITHUB_ENV
+        
+        # Verify test files exist
+        echo "Verifying test files..."
+        if [ ! -f "$WP_TESTS_DIR/includes/functions.php" ]; then
+          echo "WordPress test files not downloaded correctly"
+          echo "Directory contents:"
+          ls -la $WP_TESTS_DIR/includes
+          exit 1
+        fi
     
     - name: Run PHPUnit
       run: composer phpunit
