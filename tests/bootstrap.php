@@ -12,8 +12,8 @@ if ( ! $_tests_dir ) {
 }
 
 if ( ! file_exists( $_tests_dir . '/includes/functions.php' ) ) {
-	echo "Could not find $_tests_dir/includes/functions.php\n";
-	exit( 1 );
+    echo htmlspecialchars( "Could not find $_tests_dir/includes/functions.php\n", ENT_QUOTES, 'UTF-8' );
+    exit( 1 );
 }
 
 require_once $_tests_dir . '/includes/functions.php';
