@@ -26,6 +26,33 @@ require_once WAD_PLUGIN_DIR . 'includes/class-wad-notifications.php';
 $wad_settings = new WAD_Settings();
 $wad_notifications = new WAD_Notifications();
 
+/**
+ * Register the webinar post type
+ *
+ * @since 1.0
+ * @return void
+ */
+function register_webinar_post_type() {
+    register_post_type('webinar', array(
+        'public' => true,
+        'has_archive' => true,
+        'supports' => array('title', 'editor', 'thumbnail'),
+        'labels' => array(
+            'name' => __('Webinars', 'webinar-autodraft'),
+            'singular_name' => __('Webinar', 'webinar-autodraft'),
+            'add_new' => __('Add New', 'webinar-autodraft'),
+            'add_new_item' => __('Add New Webinar', 'webinar-autodraft'),
+            'edit_item' => __('Edit Webinar', 'webinar-autodraft'),
+            'new_item' => __('New Webinar', 'webinar-autodraft'),
+            'view_item' => __('View Webinar', 'webinar-autodraft'),
+            'search_items' => __('Search Webinars', 'webinar-autodraft'),
+            'not_found' => __('No webinars found', 'webinar-autodraft'),
+            'not_found_in_trash' => __('No webinars found in Trash', 'webinar-autodraft'),
+        ),
+    ));
+}
+add_action('init', 'register_webinar_post_type');
+
 // No auto-tagging function needed as tags will be added manually
 
 /**

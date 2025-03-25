@@ -19,13 +19,6 @@ class Test_Webinar_Auto_Draft extends WP_UnitTestCase {
     public function setUp(): void {
         parent::setUp();
         
-        // Register webinar post type
-        register_post_type('webinar', array(
-            'public' => true,
-            'has_archive' => true,
-            'supports' => array('title', 'editor', 'thumbnail'),
-        ));
-        
         // Clear mock ACF fields
         Mock_ACF::clear_fields();
     }
