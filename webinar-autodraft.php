@@ -136,6 +136,14 @@ function check_expired_webinars() {
 		error_log( '[Webinar Auto-Draft] Starting check_expired_webinars function at ' . date( 'Y-m-d H:i:s' ) );
 	}
 
+	// Check if ACF is active
+	if ( ! function_exists( 'get_field' ) ) {
+		if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+			error_log( '[Webinar Auto-Draft] Error: Advanced Custom Fields plugin is not active' );
+		}
+		return;
+	}
+
 	// Get settings.
 	$batch_size          = get_option( 'wad_batch_size', 50 );
 	$enable_logging      = get_option( 'wad_enable_logging', true );
@@ -188,7 +196,8 @@ function check_expired_webinars() {
 		// Skip if no date is set.
 		if ( empty( $webinar_date ) ) {
 			if ( $enable_logging ) {
-				WAD_Notifications::log_message(
+				$wad_notifications = new WAD_Notifications();
+				$wad_notifications->log_message(
 					sprintf(
 						'Webinar ID %d skipped: No date set.',
 						$webinar->ID
@@ -215,7 +224,8 @@ function check_expired_webinars() {
 			if ( is_wp_error( $update_result ) ) {
 				$failed_count++;
 				if ( $enable_logging ) {
-					WAD_Notifications::log_message(
+					$wad_notifications = new WAD_Notifications();
+					$wad_notifications->log_message(
 						sprintf(
 							'Failed to revert webinar ID %d to draft: %s.',
 							$webinar->ID,
@@ -227,7 +237,8 @@ function check_expired_webinars() {
 			} else {
 				$reverted_count++;
 				if ( $enable_logging ) {
-					WAD_Notifications::log_message(
+					$wad_notifications = new WAD_Notifications();
+					$wad_notifications->log_message(
 						sprintf(
 							'Successfully reverted webinar ID %d to draft status.',
 							$webinar->ID
