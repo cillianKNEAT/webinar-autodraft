@@ -40,10 +40,23 @@ class WAD_Settings {
 	 * Register the plugin settings
 	 */
 	public function register_settings() {
-		register_setting( 'wad_settings', 'wad_check_frequency' );
-		register_setting( 'wad_settings', 'wad_batch_size' );
-		register_setting( 'wad_settings', 'wad_enable_logging' );
-		register_setting( 'wad_settings', 'wad_notification_emails' );
+		// Add debug logging
+		if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+			error_log( '[Webinar Auto-Draft] Registering settings' );
+		}
+
+		register_setting( 'wad_settings', 'wad_check_frequency', array(
+			'sanitize_callback' => array( $this, 'sanitize_check_frequency' )
+		) );
+		register_setting( 'wad_settings', 'wad_batch_size', array(
+			'sanitize_callback' => array( $this, 'sanitize_batch_size' )
+		) );
+		register_setting( 'wad_settings', 'wad_enable_logging', array(
+			'sanitize_callback' => array( $this, 'sanitize_enable_logging' )
+		) );
+		register_setting( 'wad_settings', 'wad_notification_emails', array(
+			'sanitize_callback' => array( $this, 'sanitize_notification_emails' )
+		) );
 
 		add_settings_section(
 			'wad_main_section',
@@ -92,14 +105,35 @@ class WAD_Settings {
 		if ( ! current_user_can( 'manage_options' ) ) {
 			return;
 		}
+
+		// Add debug logging
+		if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+			error_log( '[Webinar Auto-Draft] Rendering settings page' );
+		}
+
+		// Check if settings were saved
+		if ( isset( $_GET['settings-updated'] ) ) {
+			if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+				error_log( '[Webinar Auto-Draft] Settings updated successfully' );
+			}
+			add_settings_error(
+				'wad_messages',
+				'wad_message',
+				__( 'Settings Saved', 'webinar-autodraft' ),
+				'updated'
+			);
+		}
+
+		// Show settings errors
+		settings_errors( 'wad_messages' );
 		?>
 		<div class="wrap">
 			<h1><?php echo esc_html( get_admin_page_title() ); ?></h1>
-			<form action="options.php" method="post">
+			<form method="post" action="options.php">
 				<?php
 				settings_fields( 'wad_settings' );
 				do_settings_sections( 'webinar-autodraft' );
-				submit_button();
+				submit_button( __( 'Save Settings', 'webinar-autodraft' ) );
 				?>
 			</form>
 		</div>
@@ -170,5 +204,49 @@ class WAD_Settings {
 			<?php esc_html_e( 'Enter one email address per line. These addresses will receive notifications about webinar status changes.', 'webinar-autodraft' ); ?>
 		</p>
 		<?php
+	}
+
+	/**
+	 * Sanitize check frequency
+	 */
+	public function sanitize_check_frequency( $value ) {
+		if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+			error_log( '[Webinar Auto-Draft] Sanitizing check frequency: ' . $value );
+		}
+		$schedules = wp_get_schedules();
+		return isset( $schedules[ $value ] ) ? $value : 'quarter_day';
+	}
+
+	/**
+	 * Sanitize batch size
+	 */
+	public function sanitize_batch_size( $value ) {
+		if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+			error_log( '[Webinar Auto-Draft] Sanitizing batch size: ' . $value );
+		}
+		$value = absint( $value );
+		return min( max( $value, 1 ), 1000 );
+	}
+
+	/**
+	 * Sanitize enable logging
+	 */
+	public function sanitize_enable_logging( $value ) {
+		if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+			error_log( '[Webinar Auto-Draft] Sanitizing enable logging: ' . ( $value ? 'true' : 'false' ) );
+		}
+		return (bool) $value;
+	}
+
+	/**
+	 * Sanitize notification emails
+	 */
+	public function sanitize_notification_emails( $value ) {
+		if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+			error_log( '[Webinar Auto-Draft] Sanitizing notification emails' );
+		}
+		$emails = array_map( 'sanitize_email', explode( "\n", $value ) );
+		$emails = array_filter( $emails, 'is_email' );
+		return empty( $emails ) ? array( get_option( 'admin_email' ) ) : $emails;
 	}
 }
