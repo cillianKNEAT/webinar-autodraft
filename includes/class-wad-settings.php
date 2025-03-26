@@ -47,19 +47,23 @@ class WAD_Settings {
 
 		register_setting( 'wad_settings', 'wad_check_frequency', array(
 			'sanitize_callback' => array( $this, 'sanitize_check_frequency' ),
-			'default' => 'quarter_day'
+			'default' => 'quarter_day',
+			'type' => 'string'
 		) );
 		register_setting( 'wad_settings', 'wad_batch_size', array(
 			'sanitize_callback' => array( $this, 'sanitize_batch_size' ),
-			'default' => 50
+			'default' => 50,
+			'type' => 'integer'
 		) );
 		register_setting( 'wad_settings', 'wad_enable_logging', array(
 			'sanitize_callback' => array( $this, 'sanitize_enable_logging' ),
-			'default' => true
+			'default' => true,
+			'type' => 'boolean'
 		) );
 		register_setting( 'wad_settings', 'wad_notification_emails', array(
 			'sanitize_callback' => array( $this, 'sanitize_notification_emails' ),
-			'default' => array( get_option( 'admin_email' ) )
+			'default' => array( get_option( 'admin_email' ) ),
+			'type' => 'array'
 		) );
 
 		add_settings_section(
@@ -133,20 +137,22 @@ class WAD_Settings {
 		?>
 		<div class="wrap">
 			<h1><?php echo esc_html( get_admin_page_title() ); ?></h1>
-			<form method="post" action="options.php">
+			<form method="post" action="options.php" id="wad-settings-form">
 				<?php
 				settings_fields( 'wad_settings' );
 				do_settings_sections( 'webinar-autodraft' );
-				submit_button( __( 'Save Settings', 'webinar-autodraft' ), 'primary', 'submit', true, array( 'id' => 'wad-save-settings' ) );
+				submit_button( __( 'Save Settings', 'webinar-autodraft' ), 'primary', 'submit', true );
 				?>
 			</form>
 		</div>
-		<script>
-		jQuery(document).ready(function($) {
-			// Ensure the save button stays visible after form submission
-			$('#wad-save-settings').show();
-		});
-		</script>
+		<style>
+		#wad-settings-form {
+			max-width: 800px;
+		}
+		#wad-settings-form .submit {
+			margin-top: 20px;
+		}
+		</style>
 		<?php
 	}
 
