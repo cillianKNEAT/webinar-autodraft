@@ -71,26 +71,23 @@ function schedule_webinar_check() {
 		error_log( '[Webinar Auto-Draft] Checking if webinar check is scheduled' );
 	}
 
-	if ( ! wp_next_scheduled( 'check_expired_webinars' ) ) {
-		// Get schedule from settings.
-		$schedule = get_option( 'wad_check_frequency', 'five_minutes' );
-		
-		if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
-			error_log( '[Webinar Auto-Draft] Scheduling webinar check with frequency: ' . $schedule );
-		}
+	// Clear any existing schedule first
+	wp_clear_scheduled_hook( 'check_expired_webinars' );
 
-		$scheduled = wp_schedule_event( time(), $schedule, 'check_expired_webinars' );
-		
-		if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
-			if ( $scheduled ) {
-				error_log( '[Webinar Auto-Draft] Successfully scheduled webinar check' );
-			} else {
-				error_log( '[Webinar Auto-Draft] Failed to schedule webinar check' );
-			}
-		}
-	} else {
-		if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
-			error_log( '[Webinar Auto-Draft] Webinar check is already scheduled' );
+	// Get schedule from settings.
+	$schedule = get_option( 'wad_check_frequency', 'five_minutes' );
+	
+	if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+		error_log( '[Webinar Auto-Draft] Scheduling webinar check with frequency: ' . $schedule );
+	}
+
+	$scheduled = wp_schedule_event( time(), $schedule, 'check_expired_webinars' );
+	
+	if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+		if ( $scheduled ) {
+			error_log( '[Webinar Auto-Draft] Successfully scheduled webinar check' );
+		} else {
+			error_log( '[Webinar Auto-Draft] Failed to schedule webinar check' );
 		}
 	}
 }
@@ -122,7 +119,9 @@ function add_webinar_schedules( $schedules ) {
 	return $schedules;
 }
 add_filter( 'cron_schedules', 'add_webinar_schedules' );
-add_action( 'wp', 'schedule_webinar_check' );
+
+// Register activation hook
+register_activation_hook( __FILE__, 'schedule_webinar_check' );
 
 /**
  * Function to check for expired webinars and revert them to draft
