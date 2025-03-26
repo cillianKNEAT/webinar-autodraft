@@ -28,6 +28,9 @@ wp-content/wp-cache-config.php
 /tests/coverage/
 .phpunit.result.cache
 
+# WordPress test files
+tests/wordpress/
+
 # Build
 *.zip
 *.tar.gz
