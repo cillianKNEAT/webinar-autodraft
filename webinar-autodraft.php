@@ -73,7 +73,7 @@ function schedule_webinar_check() {
 
 	if ( ! wp_next_scheduled( 'check_expired_webinars' ) ) {
 		// Get schedule from settings.
-		$schedule = get_option( 'wad_check_frequency', 'quarter_day' );
+		$schedule = get_option( 'wad_check_frequency', 'five_minutes' );
 		
 		if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
 			error_log( '[Webinar Auto-Draft] Scheduling webinar check with frequency: ' . $schedule );
@@ -103,6 +103,10 @@ function schedule_webinar_check() {
  * @return array Modified schedules array.
  */
 function add_webinar_schedules( $schedules ) {
+	$schedules['five_minutes'] = array(
+		'interval' => 5 * MINUTE_IN_SECONDS,
+		'display'  => __( 'Every 5 minutes', 'webinar-autodraft' ),
+	);
 	$schedules['quarter_day'] = array(
 		'interval' => 6 * HOUR_IN_SECONDS,
 		'display'  => __( 'Every 6 hours (4 times per day)', 'webinar-autodraft' ),
