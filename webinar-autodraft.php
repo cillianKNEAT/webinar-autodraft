@@ -67,10 +67,31 @@ add_action( 'init', 'register_webinar_post_type' );
  * @return void
  */
 function schedule_webinar_check() {
+	if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+		error_log( '[Webinar Auto-Draft] Checking if webinar check is scheduled' );
+	}
+
 	if ( ! wp_next_scheduled( 'check_expired_webinars' ) ) {
 		// Get schedule from settings.
 		$schedule = get_option( 'wad_check_frequency', 'quarter_day' );
-		wp_schedule_event( time(), $schedule, 'check_expired_webinars' );
+		
+		if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+			error_log( '[Webinar Auto-Draft] Scheduling webinar check with frequency: ' . $schedule );
+		}
+
+		$scheduled = wp_schedule_event( time(), $schedule, 'check_expired_webinars' );
+		
+		if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+			if ( $scheduled ) {
+				error_log( '[Webinar Auto-Draft] Successfully scheduled webinar check' );
+			} else {
+				error_log( '[Webinar Auto-Draft] Failed to schedule webinar check' );
+			}
+		}
+	} else {
+		if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+			error_log( '[Webinar Auto-Draft] Webinar check is already scheduled' );
+		}
 	}
 }
 
@@ -106,16 +127,28 @@ add_action( 'wp', 'schedule_webinar_check' );
  * @return void
  */
 function check_expired_webinars() {
+	// Add debug logging
+	if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+		error_log( '[Webinar Auto-Draft] Starting check_expired_webinars function at ' . date( 'Y-m-d H:i:s' ) );
+	}
+
 	// Get settings.
 	$batch_size          = get_option( 'wad_batch_size', 50 );
 	$enable_logging      = get_option( 'wad_enable_logging', true );
 	$notification_emails = get_option( 'wad_notification_emails', array( get_option( 'admin_email' ) ) );
 
+	if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+		error_log( '[Webinar Auto-Draft] Settings loaded - batch_size: ' . $batch_size . ', enable_logging: ' . ( $enable_logging ? 'true' : 'false' ) );
+	}
+
 	// Get current UTC date.
 	$current_date = gmdate( 'Ymd' );
 
+	if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+		error_log( '[Webinar Auto-Draft] Current UTC date: ' . $current_date );
+	}
+
 	// Get all published webinar posts with the "autodraft" tag.
-	// phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_tax_query -- Using simpler tag parameter for better performance
 	$args = array(
 		'post_type'      => 'webinar',
 		'post_status'    => 'publish',
@@ -123,9 +156,20 @@ function check_expired_webinars() {
 		'tag'            => 'autodraft',
 	);
 
+	if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+		error_log( '[Webinar Auto-Draft] Query args: ' . print_r( $args, true ) );
+	}
+
 	$webinars = get_posts( $args );
 
+	if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+		error_log( '[Webinar Auto-Draft] Found ' . count( $webinars ) . ' webinars to process' );
+	}
+
 	if ( empty( $webinars ) ) {
+		if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+			error_log( '[Webinar Auto-Draft] No webinars found to process' );
+		}
 		return;
 	}
 
